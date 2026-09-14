@@ -1,7 +1,7 @@
 import { useEffect, type ReactNode } from "react";
 import { Navigate, useLocation, useNavigate } from "react-router";
 import { useQueryClient } from "@tanstack/react-query";
-import { sessionEvents } from "@/lib/api";
+import { sessionEvents, sessionState } from "@/lib/api";
 import { strings } from "@/lib/strings";
 import { Button } from "@/components/ui/button";
 import { FullPageSpinner } from "./full-page-spinner";
@@ -69,7 +69,9 @@ export function RouteGuard({ kind, children }: { kind: GuardKind; children: Reac
 
   if ((kind === "user" || kind === "admin") && !me) {
     const redirect = sanitizeRedirect(location.pathname + location.search);
-    return <Navigate to={`/login?redirect=${encodeURIComponent(redirect)}`} replace />;
+    const expired = Date.now() - sessionState.expiredAt < 10_000;
+    const suffix = expired ? "?expired=1&" : "?";
+    return <Navigate to={`/login${suffix}redirect=${encodeURIComponent(redirect)}`} replace />;
   }
   if (kind === "admin" && me?.role !== "admin") {
     return <Navigate to="/" replace />;

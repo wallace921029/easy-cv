@@ -26,6 +26,11 @@ export class ApiError extends Error {
 // Minimal pub/sub for the "session expired" event; the route guard subscribes
 // and redirects to /login?expired=1.
 const sessionExpiredListeners = new Set<() => void>();
+export const sessionState = {
+  // The guard's unauthenticated redirect also checks this so the "登录已过期"
+  // banner survives regardless of which navigation wins the race.
+  expiredAt: 0,
+};
 export const sessionEvents = {
   subscribe(listener: () => void): () => void {
     sessionExpiredListeners.add(listener);
@@ -34,6 +39,7 @@ export const sessionEvents = {
     };
   },
   emit(): void {
+    sessionState.expiredAt = Date.now();
     for (const listener of [...sessionExpiredListeners]) {
       listener();
     }

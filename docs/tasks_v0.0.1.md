@@ -726,16 +726,16 @@ type RegistrationSettings = {
 
 ### 阶段 8：账户设置与管理后台
 
-- [ ] **T8.1 `/settings` 账户设置**
+- [x] **T8.1 `/settings` 账户设置**
   - 「修改密码」卡片：当前密码、新密码、确认新密码；成功后 toast「密码已修改，其他设备已退出登录」并清空表单。
   - 「外观」卡片：主题三选一（`toggle-group` 或 `radio-group`）。
   - 页面顶部有返回主页的入口。
 
-- [ ] **T8.2 `/admin` 布局**
+- [x] **T8.2 `/admin` 布局**
   - 使用 `tabs` 分为「用户管理」和「注册设置」两个标签，当前标签同步到 URL 查询参数 `?tab=users|registration`，刷新后保持。
   - 页面顶部有返回主页的入口。
 
-- [ ] **T8.3 用户管理 `users-table.tsx`**
+- [x] **T8.3 用户管理 `users-table.tsx`**
   - 使用 `table` 组件，列：用户名、角色（`badge`）、状态（`badge`，停用的用醒目颜色）、条目数、注册时间、最近登录（从未登录显示「—」）。外层容器 `overflow-x-auto`，保证移动端可以横向滚动。
   - 每行末尾的「⋯」菜单（管理员所在行不显示菜单）：
     - 「停用」：`alert-dialog` 确认「停用后该用户将立即退出所有设备，且无法登录。数据会保留。」；「启用」：直接执行。
@@ -743,7 +743,7 @@ type RegistrationSettings = {
     - 「删除」→ `delete-user-dialog.tsx`：说明「将永久删除该用户及其全部 N 条内容，不可恢复」，需要输入该用户名才能点击删除按钮。
   - 所有操作成功后刷新列表并 toast 提示。
 
-- [ ] **T8.4 注册设置 `registration-settings.tsx`**
+- [x] **T8.4 注册设置 `registration-settings.tsx`**
   - 「开放注册」开关（`switch`），切换后立即保存。
   - 邀请码区域：
     - 没有邀请码时显示「尚未生成，开放注册时会自动生成」。
