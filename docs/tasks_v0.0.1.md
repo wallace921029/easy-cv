@@ -555,28 +555,28 @@ type RegistrationSettings = {
 
 ### 阶段 5：前端基础设施
 
-- [ ] **T5.1 安装 TanStack Query，并改造 `src/main.tsx`**
+- [x] **T5.1 安装 TanStack Query，并改造 `src/main.tsx`**
   - 按 T0.1 清理后的状态，安装 `@tanstack/react-query`。
   - `QueryClient` 默认配置：`refetchOnWindowFocus: true`（即 PRD 的「页面重新可见时自动刷新」）；`retry` 只对网络错误和 5xx 重试 1 次，4xx 不重试；`staleTime: 0`。
   - 组件层级：`ThemeProvider` → `QueryClientProvider` → `Toaster`（来自 `@/components/ui/toast`）→ `RouterProvider`。
   - 删除模板自带的 `App.tsx`。
 
-- [ ] **T5.2 API 客户端 `src/lib/api.ts`**
+- [x] **T5.2 API 客户端 `src/lib/api.ts`**
   - axios 实例，`baseURL: "/api"`。
   - 定义 `ApiError { status, code, message }`；把响应错误统一转成 `ApiError`；网络错误转成 `code: "NETWORK_ERROR"`。
   - 响应拦截器：收到 401，且请求不是 `/auth/me`、`/auth/login`、`/setup`、`/auth/register` 时，触发「会话过期」事件（一个简单的事件订阅即可），由路由守卫清掉 `me` 缓存并跳转到 `/login?expired=1`。
   - 每个接口一个带类型的函数，例如 `api.clips.create(content)`，类型取自 `src/lib/types.ts`。
 
-- [ ] **T5.3 类型、校验与表单**
+- [x] **T5.3 类型、校验与表单**
   - `src/lib/types.ts`：§3.3 的全部类型，以及各接口的响应类型。
   - `src/lib/validation.ts`：与 §3.4 一致的 zod schema（用户名、密码、确认密码一致、邀请码）。
   - `src/lib/form.ts`：极简 zod resolver，把 zod 错误映射为 react-hook-form 的 `errors`（D10）。
 
-- [ ] **T5.4 文案 `src/lib/strings.ts`**
+- [x] **T5.4 文案 `src/lib/strings.ts`**
   - 集中存放所有界面文案，包括 PRD §4.10 的提示文案。
   - 提供 `errorMessage(err)`：按 §3.2 的 `code` 返回中文提示；`NETWORK_ERROR` →「网络异常，请重试」；未知 code 时回退到服务端返回的 `message`。
 
-- [ ] **T5.5 工具函数与 hooks**
+- [x] **T5.5 工具函数与 hooks**
   - `src/lib/time.ts`：注册 day.js 的 `zh-cn` 语言包；`formatClipTime(ts, now)` 严格按 PRD §4.1 的时间显示表实现；`formatFullTime(ts)` 返回 `YYYY-MM-DD HH:mm:ss`。
   - `src/hooks/use-now.ts`：每 60 秒更新一次当前时间，列表层只挂一个，把 `now` 往下传。
   - `src/hooks/use-debounced-value.ts`。
@@ -586,12 +586,12 @@ type RegistrationSettings = {
     - `canReadClipboard(): boolean`：`window.isSecureContext && typeof navigator.clipboard?.readText === 'function'`。
   - `src/lib/codes.ts` 或写进 `strings.ts`：`formatInviteCode(code)`，每 4 位插一个 `-`。
 
-- [ ] **T5.6 主题**
+- [x] **T5.6 主题**
   - `public/theme-init.js`：读取 `localStorage['ecv-theme']`（`system` | `light` | `dark`，默认 `system`），结合 `prefers-color-scheme` 决定是否给 `<html>` 加 `dark` class。所有 `localStorage` 访问都要 try/catch。
   - `index.html` 的 `<head>` 中用 `<script src="/theme-init.js"></script>` 同步引用（D15）。
   - `components/app/theme-provider.tsx`：提供 `theme` 和 `setTheme`；主题为 `system` 时监听系统主题变化。
 
-- [ ] **T5.7 路由与守卫**
+- [x] **T5.7 路由与守卫**
   - `src/router.tsx`：用 `createBrowserRouter` 定义 `/setup`、`/login`、`/register`、`/`、`/settings`、`/admin`，以及 `*`（跳转到 `/`）。
   - `components/app/route-guard.tsx`：用 `system/status` 和 `auth/me` 两个查询决定跳转；两者都在加载时显示全屏 Spinner。跳转规则：
 
