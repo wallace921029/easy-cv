@@ -493,20 +493,20 @@ type RegistrationSettings = {
 
 ### 阶段 3：剪贴板接口
 
-- [ ] **T3.1 条目服务与路由**（`services/clips.ts`、`routes/clips.ts`）
+- [x] **T3.1 条目服务与路由**（`services/clips.ts`、`routes/clips.ts`）
   - 严格按 §3.5「剪贴板」部分实现，包括去重、排序、游标、搜索转义、置顶和取消置顶对各时间字段的影响。
   - 所有查询都以 `user_id = request.user.id AND deleted_at IS NULL` 为前提；访问别人的条目返回 404（不要返回 403，避免暴露条目是否存在）。
   - 字节数用 `Buffer.byteLength(content, 'utf8')` 计算。
 
-- [ ] **T3.2 数据库行到 API 对象的转换**
+- [x] **T3.2 数据库行到 API 对象的转换**
   - 在一个地方统一实现 snake_case 行 → §3.3 中 `Clip` 结构的转换，不要把 `user_id`、`content_hash`、`deleted_at` 返回给前端。
 
-- [ ] **T3.3 定时清理 `jobs/cleanup.ts`**
+- [x] **T3.3 定时清理 `jobs/cleanup.ts`**
   - `runCleanup(db, now)`：物理删除 `deleted_at < now - 24h` 的条目，删除 `expires_at < now` 的会话；返回删除数量。
   - `startCleanupJob(db, logger)`：启动时立即执行一次，之后每小时执行一次（`setInterval(...).unref()`）；返回停止函数。清理数量大于 0 时输出一条 info 日志。
   - 定时器只在 `server.ts` 中启动，`buildApp` 不负责，这样测试可以自己控制调用时机。
 
-- [ ] **T3.4 测试 `test/clips.test.ts`**，至少覆盖：
+- [x] **T3.4 测试 `test/clips.test.ts`**，至少覆盖：
   - [ ] 创建：正常 → 201；空字符串和纯空白（空格、换行、制表符）→ 400 `EMPTY_CONTENT`；首尾空格原样保留；超过上限（在测试里把上限配小）→ 413。
   - [ ] 去重：相同内容第二次创建 → 200、`deduplicated: true`、ID 相同、`activeAt` 变大；与置顶条目内容相同 → `activeAt` 不变；与已软删除的条目内容相同 → 正常新建。
   - [ ] 列表：创建 35 条，第一页 30 条、带 `nextCursor`，第二页 5 条、`nextCursor = null`，没有重复和遗漏；置顶条目不出现在默认列表中；`pinned=true` 按置顶时间倒序返回。

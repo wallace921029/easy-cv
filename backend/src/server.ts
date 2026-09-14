@@ -1,6 +1,7 @@
 import { buildApp } from "./app.js";
 import { loadConfig } from "./config.js";
 import { createDb, runMigrations } from "./db/client.js";
+import { startCleanupJob } from "./jobs/cleanup.js";
 import { isInitialized } from "./services/users.js";
 
 const config = loadConfig();
@@ -20,7 +21,10 @@ if (initialized && config.adminInviteCode) {
   app.log.info("系统已初始化，ADMIN_INVITE_CODE 已失效，可以从 .env 中删除");
 }
 
+const stopCleanup = startCleanupJob(db, app.log);
+
 async function shutdown(): Promise<void> {
+  stopCleanup();
   await app.close();
   sqlite.close();
   process.exit(0);
