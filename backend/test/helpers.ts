@@ -3,6 +3,10 @@ import type { LightMyRequestResponse } from "fastify";
 import { buildApp, type RateLimitConfig } from "../src/app.js";
 import { createConfig, type Config } from "../src/config.js";
 import { createDb, runMigrations, type Db } from "../src/db/client.js";
+import {
+  updateRegistrationSettings,
+  type RegistrationSettings,
+} from "../src/services/settings.js";
 
 export const TEST_INIT_CODE = "test-init-code-123";
 
@@ -90,4 +94,8 @@ export async function login(
 export function authed(app: FastifyInstance, cookie: string) {
   return (opts: InjectOptions): Promise<LightMyRequestResponse> =>
     app.inject({ ...opts, headers: { cookie, ...opts.headers } });
+}
+
+export function enableRegistration(db: Db, inviteCode = "TESTCODE8"): RegistrationSettings {
+  return updateRegistrationSettings(db, { registrationEnabled: true, inviteCode });
 }

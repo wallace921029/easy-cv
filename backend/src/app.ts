@@ -10,8 +10,10 @@ import {
 import type { Config } from "./config.js";
 import type { Db } from "./db/client.js";
 import { AppError } from "./lib/errors.js";
+import { registerAuth } from "./plugins/auth.js";
 import { registerOriginCheck } from "./plugins/origin-check.js";
 import { registerWeb } from "./plugins/web.js";
+import { authRoutes } from "./routes/auth.js";
 import { systemRoutes } from "./routes/system.js";
 
 export type RateLimitConfig = {
@@ -90,6 +92,8 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     // why the directives below are helmet's defaults minus that entry.
     strictTransportSecurity: false,
     contentSecurityPolicy: {
+      // useDefaults would re-add upgrade-insecure-requests.
+      useDefaults: false,
       directives: {
         "default-src": ["'self'"],
         "base-uri": ["'self'"],
@@ -107,10 +111,12 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
   await app.register(fastifyCookie);
   await app.register(fastifyRateLimit, { global: false });
   registerOriginCheck(app);
+  registerAuth(app);
 
   await app.register(
     async (api) => {
       await api.register(systemRoutes);
+      await api.register(authRoutes);
     },
     { prefix: "/api" },
   );

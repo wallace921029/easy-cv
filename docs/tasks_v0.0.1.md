@@ -445,35 +445,35 @@ type RegistrationSettings = {
 
 ### 阶段 2：认证与系统初始化
 
-- [ ] **T2.1 基础工具**
+- [x] **T2.1 基础工具**
   - `lib/crypto.ts`：`randomToken()`（32 字节 base64url）、`sha256(text)`（hex）、`safeEqual(a, b)`（§3.4 的比较方式）。
   - `lib/password.ts`：基于 `@node-rs/argon2` 的 `hashPassword`、`verifyPassword`（默认参数，argon2id），以及模块加载时生成一次的假哈希 `DUMMY_HASH`，用于用户不存在时的等时校验。
   - `lib/codes.ts`：`normalizeCode(input)`、`generateInviteCode()`（§3.4）。
   - `lib/validation.ts`：§3.4 中各字段的 zod schema。
 
-- [ ] **T2.2 设置项服务 `services/settings.ts`**
+- [x] **T2.2 设置项服务 `services/settings.ts`**
   - `getRegistrationSettings(db)`、`updateRegistrationSettings(db, patch)`、`regenerateInviteCode(db)`。
   - 键为 `registration_enabled`（值为 `"true"`/`"false"`，默认 false）和 `invite_code`（不存在表示还没有邀请码）。
 
-- [ ] **T2.3 会话服务 `services/sessions.ts`**
+- [x] **T2.3 会话服务 `services/sessions.ts`**
   - `createSession(db, userId, userAgent)` 返回 token；`findValidSession(db, token)`；`touchSession`（滑动续期）；`deleteSession`；`deleteUserSessions(db, userId, exceptSessionId?)`；`deleteExpiredSessions(db, now)`。
   - `setSessionCookie(reply, request, token, config)` 和 `clearSessionCookie(reply)`，Cookie 属性见 §3.6。
 
-- [ ] **T2.4 认证插件 `plugins/auth.ts`**
+- [x] **T2.4 认证插件 `plugins/auth.ts`**
   - 给 `request` 增加 `user`（`User & { status }`）和 `sessionId`。
   - 提供两个 `preHandler`：`requireUser`、`requireAdmin`，行为见 §3.5 开头和 §3.6。
 
-- [ ] **T2.5 系统与认证路由**
+- [x] **T2.5 系统与认证路由**
   - `routes/system.ts`：`GET /health`、`GET /system/status`。
   - `routes/auth.ts`：`POST /setup`、`POST /auth/register`、`POST /auth/login`、`POST /auth/logout`、`GET /auth/me`、`PUT /auth/password`。
   - setup 的并发安全：**先在事务外完成 argon2 哈希**（异步），再在 better-sqlite3 的同步事务里重新检查「用户表为空」并插入管理员。多个请求同时到达时只有一个成功，其余返回 `409 ALREADY_INITIALIZED`。
   - register 同样先哈希，再插入；插入时因唯一索引冲突要转换成 `409 USERNAME_TAKEN`。
 
-- [ ] **T2.6 启动检查（在 `server.ts` 中）**
+- [x] **T2.6 启动检查（在 `server.ts` 中）**
   - 用户表为空，且 `ADMIN_INVITE_CODE` 未设置或长度 < 8 → 输出错误日志「系统尚未初始化，请在 .env 中设置 ADMIN_INVITE_CODE（至少 8 位）后重启」，以退出码 1 退出。
   - 用户表非空，且设置了 `ADMIN_INVITE_CODE` → 输出 info 日志「系统已初始化，ADMIN_INVITE_CODE 已失效，可以从 .env 中删除」。
 
-- [ ] **T2.7 测试 `test/auth.test.ts`**，至少覆盖：
+- [x] **T2.7 测试 `test/auth.test.ts`**，至少覆盖：
   - [ ] 未初始化时 `status.initialized = false`；`register` 返回 `403 REGISTRATION_CLOSED`。
   - [ ] setup 初始化码错误 → 403；正确 → 201，返回 `role: admin`，并设置 Cookie。
   - [ ] 初始化码校验忽略大小写、空格和 `-`。

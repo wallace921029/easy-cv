@@ -6,6 +6,10 @@ import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema.js";
 
 export type Db = BetterSQLite3Database<typeof schema>;
+// Inferred from the driver itself so services accept either a database or a
+// transaction handle without hardcoding drizzle's generic parameters.
+export type Tx = Parameters<Parameters<Db["transaction"]>[0]>[0];
+export type DbOrTx = Db | Tx;
 
 export type DbHandle = {
   db: Db;
