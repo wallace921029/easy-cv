@@ -24,4 +24,4 @@ export function confirmPasswordRefinement(
 export const confirmPasswordIssue = {
   path: ["confirmPassword"],
   message: strings.validation.passwordMismatch,
-} as const;
+};

@@ -592,6 +592,7 @@ type RegistrationSettings = {
   - `components/app/theme-provider.tsx`：提供 `theme` 和 `setTheme`；主题为 `system` 时监听系统主题变化。
 
 - [x] **T5.7 路由与守卫**
+  > 偏离说明：`vite.config.ts` 的 `/api` 代理显式加了 `changeOrigin: false`；Vite 8 默认把 Host 改写为代理目标，会导致开发环境下 §3.6 的 Origin 校验误报 403。
   - `src/router.tsx`：用 `createBrowserRouter` 定义 `/setup`、`/login`、`/register`、`/`、`/settings`、`/admin`，以及 `*`（跳转到 `/`）。
   - `components/app/route-guard.tsx`：用 `system/status` 和 `auth/me` 两个查询决定跳转；两者都在加载时显示全屏 Spinner。跳转规则：
 
@@ -611,23 +612,23 @@ type RegistrationSettings = {
 
 ### 阶段 6：认证页面
 
-- [ ] **T6.1 公共组件**
+- [x] **T6.1 公共组件**
   - `auth-layout.tsx`：页面居中的卡片，顶部是 Logo 和标题。
   - `password-input.tsx`：基于 `input-group`，右侧有显示 / 隐藏切换按钮（带 `aria-label`）。
   - 表单统一使用 `field.tsx` 组件展示标签和错误信息；提交中按钮显示 Spinner 并禁用。
 
-- [ ] **T6.2 `/setup` 创建管理员**
+- [x] **T6.2 `/setup` 创建管理员**
   - 标题「创建管理员账户」，副标题说明初始化码来自服务器 `.env` 中的 `ADMIN_INVITE_CODE`。
   - 字段：用户名、密码、确认密码、初始化码。
   - 成功后刷新 `status` 和 `me` 查询，跳转到 `/`。
 
-- [ ] **T6.3 `/login` 登录**
+- [x] **T6.3 `/login` 登录**
   - 带 `?expired=1` 时在表单上方显示「登录已过期，请重新登录」。
   - 错误提示按 PRD §4.6（`INVALID_CREDENTIALS`、`ACCOUNT_DISABLED`、`RATE_LIMITED`）。
   - 成功后跳转到 `redirect` 参数指定的路径，没有则跳转到 `/`。
   - `status.registrationOpen` 为 true 时显示「没有账户？注册」链接。
 
-- [ ] **T6.4 `/register` 注册**
+- [x] **T6.4 `/register` 注册**
   - `registrationOpen` 为 false 时，只显示「当前未开放注册，请联系管理员」和返回登录的链接。
   - 字段：用户名、密码、确认密码、邀请码；带 `?code=` 时自动填入邀请码。
   - 成功后跳转到 `/`。

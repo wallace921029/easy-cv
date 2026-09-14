@@ -13,7 +13,9 @@ export default defineConfig({
   },
   server: {
     proxy: {
-      "/api": "http://127.0.0.1:8000",
+      // changeOrigin must stay off so the backend's Origin/Host consistency
+      // check sees the browser's original Host header.
+      "/api": { target: "http://127.0.0.1:8000", changeOrigin: false },
     },
   },
 });

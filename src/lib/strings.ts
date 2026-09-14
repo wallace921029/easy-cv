@@ -62,6 +62,8 @@ export const strings = {
     registrationClosed: "当前未开放注册，请联系管理员",
     registerTitle: "注册账户",
     welcome: "欢迎回来",
+    showPassword: "显示密码",
+    hidePassword: "隐藏密码",
   },
   clips: {
     new: "新建",
