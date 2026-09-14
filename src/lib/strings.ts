@@ -92,6 +92,8 @@ export const strings = {
     editorNewTitle: "新建条目",
     editorEditTitle: "编辑条目",
     editorPlaceholder: "输入或粘贴文本…",
+    saving: "保存中…",
+    clearSearch: "清空搜索",
   },
   settings: {
     title: "账户设置",

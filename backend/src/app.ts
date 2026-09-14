@@ -48,7 +48,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
     // JSON escaping inflates the payload, so the hard limit lives in the
     // content byte-size validation instead of the body parser.
     bodyLimit: config.maxTextBytes * 2 + 16 * 1024,
-    logger: (options.logger ?? config.nodeEnv === "production") ? { level: "info" } : false,
+    logger: options.logger ?? { level: "info" },
   });
 
   app.setValidatorCompiler(validatorCompiler);

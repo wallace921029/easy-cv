@@ -639,7 +639,7 @@ type RegistrationSettings = {
 
 ### 阶段 7：剪贴板主页
 
-- [ ] **T7.1 查询与变更 `src/queries/clips.ts`**
+- [x] **T7.1 查询与变更 `src/queries/clips.ts`**
   - 查询键：`["clips", "pinned"]`、`["clips", "list", { q }]`（`q` 为空字符串表示默认列表）。
   - `usePinnedClips()`：仅在没有搜索词时启用。
   - `useClipList(q)`：`useInfiniteQuery`，用 `nextCursor` 翻页。
@@ -648,13 +648,13 @@ type RegistrationSettings = {
   - `useDeleteClip()`：乐观更新，立即从所有 `["clips", …]` 缓存中移除该条目；失败时 `invalidateQueries` 恢复，并提示错误。
   - `useRestoreClip()`：成功后 `invalidateQueries(["clips"])`。
 
-- [ ] **T7.2 顶栏 `app-header.tsx` 与用户菜单 `user-menu.tsx`**
+- [x] **T7.2 顶栏 `app-header.tsx` 与用户菜单 `user-menu.tsx`**
   - 桌面端（≥ 768px）：一行，依次为 Logo、搜索框、「新建」按钮、用户菜单。
   - 移动端（< 768px）：两行，第一行 Logo + 用户菜单，第二行搜索框；「新建」按钮不显示，改用悬浮按钮（T7.6）。
   - 用户菜单（`dropdown-menu`）：显示用户名；「账户设置」；「管理后台」（仅管理员）；主题（跟随系统 / 浅色 / 深色，单选）；「退出登录」。
   - 退出登录：调用接口 → 清空全部查询缓存 → 跳转到 `/login`。
 
-- [ ] **T7.3 条目内容渲染 `clip-content.tsx` 和 `src/lib/rich-text.tsx`**
+- [x] **T7.3 条目内容渲染 `clip-content.tsx` 和 `src/lib/rich-text.tsx`**
   - `renderRichText(text, keyword?)`：先把文本切分为 URL 片段和普通片段，再在各片段内高亮关键词（不区分大小写，用 `<mark>`）。
     - URL 正则只匹配 `http://` 和 `https://`，并去掉末尾的中英文标点（`.,;:!?)]}` 以及 `，。！？、；：）】》`）。
     - 链接渲染为 `<a target="_blank" rel="noopener noreferrer">`，点击时 `stopPropagation`，避免触发卡片的复制。
@@ -662,7 +662,7 @@ type RegistrationSettings = {
   - 折叠状态：只渲染前 3000 个字符（D11），样式为 `whitespace-pre-wrap break-words` + `line-clamp-8`；通过比较 `scrollHeight` 和 `clientHeight` 判断是否溢出，溢出时底部加渐隐遮罩并显示「展开」。
   - 展开状态：渲染全文，最大高度 `60vh`，超出部分可滚动，显示「收起」。
 
-- [ ] **T7.4 条目卡片 `clip-card.tsx`**
+- [x] **T7.4 条目卡片 `clip-card.tsx`**
   - 结构：内容区（T7.3）+ 元信息行 + 操作区。
   - 元信息行：时间（`formatClipTime`，悬停时用 `tooltip` 显示 `formatFullTime`）· 字数（`Array.from(content).length`）· 「已编辑」（`updatedAt > createdAt` 时显示）；已置顶时显示图钉图标。
   - 操作区：「复制」按钮始终可见；复制成功后图标变成 ✓，1.5 秒后恢复，同时 toast「已复制」；复制失败时 toast 提示。
@@ -670,7 +670,8 @@ type RegistrationSettings = {
   - **单击卡片即复制**：在卡片根元素上监听 click；以下情况不复制：`window.getSelection()?.toString()` 非空，或者点击目标位于 `a`、`button`、`[role="menuitem"]` 之内。
   - 高亮：接收 `highlighted` 属性，显示约 1.5 秒逐渐淡出的描边，用于新建、去重、撤销删除后的定位；高亮时自动 `scrollIntoView({ block: "nearest" })`。
 
-- [ ] **T7.5 待保存条目 `pending-clips.tsx` 与创建流程**
+- [x] **T7.5 待保存条目 `pending-clips.tsx` 与创建流程**
+  > 偏离说明：`useCreateClip` 设了 `networkMode: "always"`——TanStack Query 默认在断网时挂起 mutation，那样断网粘贴会一直停在「保存中」而不是 PRD 要求的失败卡片。
   - 维护一个页面级的「待保存」列表：`{ tempId, content, status: "saving" | "failed" }[]`。`tempId` 用自增计数器生成（见 §0.3）。
   - 待保存条目渲染在「最近」分组的最上方，外观与普通卡片一致：保存中显示 Spinner；失败时显示红色边框、错误原因，以及「重试」「移除」两个按钮。
   - 提交成功：
@@ -678,7 +679,7 @@ type RegistrationSettings = {
     - `deduplicated: true` → 移除待保存条目，`invalidateQueries(["clips"])`，刷新后高亮该条目；toast「内容已存在，已移到最前」，**不带撤销**（撤销会误删原来的条目）。
   - 提交前在前端检查字节数（`new TextEncoder().encode(text).length > status.maxTextBytes`），超出时直接 toast，不发请求。
 
-- [ ] **T7.6 新建 / 编辑编辑器 `clip-editor.tsx` 与悬浮按钮 `new-clip-fab.tsx`**
+- [x] **T7.6 新建 / 编辑编辑器 `clip-editor.tsx` 与悬浮按钮 `new-clip-fab.tsx`**
   - 同一个组件用于「新建」和「编辑」两种模式；桌面端用 `dialog`，移动端（`useIsMobile()`）用 `drawer`。
   - 内容：`textarea`（打开时自动聚焦，最小 6 行，内容过长时可滚动）；底部左侧显示字数，右侧是「取消」「保存」按钮。
   - 「读取剪贴板」按钮：仅在 `canReadClipboard()` 为 true 时显示，读取成功后把文本**插入到光标位置**。读取失败（用户拒绝授权等）时 toast 提示。
@@ -687,7 +688,8 @@ type RegistrationSettings = {
   - 编辑模式下内容没有改动时，「保存」按钮禁用。
   - 悬浮按钮：仅移动端显示，固定在右下角（考虑 `env(safe-area-inset-bottom)`），点击打开新建编辑器。
 
-- [ ] **T7.7 全局粘贴 `src/hooks/use-paste-to-create.ts`**
+- [x] **T7.7 全局粘贴 `src/hooks/use-paste-to-create.ts`**
+  > 偏离说明：对话框检测不用 `[role="dialog"]` 选择器——Base UI 的 Toast.Root 带 `role="dialog"`，任何 toast 显示期间粘贴都会被误吞。改为按 data-slot 匹配 `dialog-content` / `alert-dialog-content` / `drawer-popup`。
   - 只在主页挂载，监听 `document` 的 `paste` 事件。
   - 以下情况直接 return，不调用 `preventDefault`：
     - 事件目标或 `document.activeElement` 位于 `input`、`textarea`、`select` 中，或 `isContentEditable` 为 true；
@@ -697,7 +699,7 @@ type RegistrationSettings = {
     - 否则，如果 `clipboardData.files.length > 0` 或 `types` 中包含 `image/*` → toast「目前只支持保存文本」；
     - 否则 → toast「剪贴板中没有可保存的内容」。
 
-- [ ] **T7.8 列表页 `pages/home.tsx` 与 `clip-list.tsx`**
+- [x] **T7.8 列表页 `pages/home.tsx` 与 `clip-list.tsx`**
   - 没有搜索词时：依次显示「已置顶」分组（没有置顶条目时不显示该分组标题）、待保存条目、「最近」分组。
   - 有搜索词时：只显示一个结果列表，关键词高亮，不显示待保存条目。
   - 无限滚动：在列表末尾放一个哨兵元素，用 `IntersectionObserver` 触发 `fetchNextPage`；加载中显示 Spinner；没有更多数据时显示「没有更多了」（只有一页时不显示）。
@@ -709,11 +711,12 @@ type RegistrationSettings = {
   - 列表加载失败：显示错误提示和「重试」按钮。
   - 布局：内容区 `max-w-3xl` 居中；移动端卡片全宽，底部留出悬浮按钮的空间。
 
-- [ ] **T7.9 搜索框 `search-box.tsx`**
+- [x] **T7.9 搜索框 `search-box.tsx`**
   - 输入防抖 300ms 后更新搜索词；左侧放搜索图标；有内容时右侧显示清除按钮。
   - 聚焦时按 Esc：清空内容并失去焦点。
 
-- [ ] **T7.10 删除与撤销**
+- [x] **T7.10 删除与撤销**
+  > 偏离说明：「已删除+撤销」toast 由主页层（而非卡片）触发——删除会卸载卡片组件，TanStack Query 会丢弃已卸载组件 `mutate()` 的回调，toast 永远不显示。
   - 点击删除后乐观移除，toast「已删除」，带「撤销」按钮，`timeout: 5000`。
   - 点击撤销 → 调用 restore → 刷新列表并高亮恢复的条目。
 
