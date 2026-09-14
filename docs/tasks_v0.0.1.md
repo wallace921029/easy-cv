@@ -365,7 +365,7 @@ type RegistrationSettings = {
 
 ### 阶段 1：后端基础
 
-- [ ] **T1.1 初始化 `backend/` 工程**
+- [x] **T1.1 初始化 `backend/` 工程**
   - `package.json`：`"type": "module"`、`"private": true`、`"engines": { "node": ">=24" }`。
   - 脚本：
 
@@ -382,7 +382,7 @@ type RegistrationSettings = {
   - `tsconfig.build.json`：继承上面的配置，`rootDir: src`、`outDir: dist`，只 include `src`。
   - 按 §2.2 安装依赖。
 
-- [ ] **T1.2 配置模块 `src/config.ts`**
+- [x] **T1.2 配置模块 `src/config.ts`**
   - 非生产环境下，如果 `<仓库根>/.env` 存在就调用 `process.loadEnvFile()` 读取。
   - 用 zod 解析环境变量，缺失时使用默认值：
 
@@ -398,7 +398,7 @@ type RegistrationSettings = {
   - 导出 `Config` 类型，其中还包含计算出来的 `dataDir`、`dbPath`（`<dataDir>/easy-cv.db`）、`webDir`、`migrationsDir`、`maxTextBytes`、`sessionTtlMs`（路径推算规则见 D7）。
   - 解析失败时抛出带有变量名的清晰错误。
 
-- [ ] **T1.3 数据库**
+- [x] **T1.3 数据库**
   - `src/db/schema.ts`：按 PRD §6.4 定义 `users`、`sessions`、`settings`、`clips` 四张表。
     - 所有时间字段为 `integer`（毫秒），ID 为 `text`。
     - 外键 `ON DELETE CASCADE`。
@@ -410,7 +410,7 @@ type RegistrationSettings = {
   - 提供 `runMigrations(db, migrationsDir)`，使用 `drizzle-orm/better-sqlite3/migrator` 的 `migrate`。
   - 如果数据目录不存在就自动创建；创建或写入失败时抛出清晰的错误：「数据目录不可写：<路径>。如果使用 Docker，请执行 `sudo chown -R 1000:1000 ./data`」。
 
-- [ ] **T1.4 应用工厂 `src/app.ts`**
+- [x] **T1.4 应用工厂 `src/app.ts`**
   - `buildApp({ config, db, rateLimit? })` 返回 Fastify 实例：
     - Fastify 选项：`trustProxy: config.trustProxy`、`bodyLimit`（见 §3.6）、`logger`（生产环境 `info`，测试时关闭）。
     - 注册 `fastify-type-provider-zod` 的 `validatorCompiler` 和 `serializerCompiler`。
@@ -425,16 +425,16 @@ type RegistrationSettings = {
     - rate-limit 错误 → `429 RATE_LIMITED`，message「操作太频繁，请稍后再试」；
     - 其他错误 → 记录日志，返回 `500 INTERNAL_ERROR`。
 
-- [ ] **T1.5 前端静态资源托管 `src/plugins/web.ts`**
+- [x] **T1.5 前端静态资源托管 `src/plugins/web.ts`**
   - `config.webDir` 不存在时（开发环境）跳过注册静态资源。
   - 存在时用 `@fastify/static` 托管，`/assets/*` 设置 `Cache-Control: public, max-age=31536000, immutable`，`index.html` 设置 `Cache-Control: no-cache`。
   - `setNotFoundHandler`：`/api` 开头的路径返回 `404 NOT_FOUND`（JSON）；其他 `GET` 请求返回 `index.html`（SPA 回退）；其他情况返回 404。
 
-- [ ] **T1.6 入口 `src/server.ts`**
+- [x] **T1.6 入口 `src/server.ts`**
   - 顺序：加载配置 → 打开数据库 → 执行迁移 → 启动检查（T2.6）→ `buildApp` → 启动定时清理任务（T3.3）→ 监听 `0.0.0.0:PORT`。
   - 收到 `SIGINT` 或 `SIGTERM` 时：停止定时任务、`app.close()`、关闭数据库，然后退出。
 
-- [ ] **T1.7 测试脚手架 `test/helpers.ts`**
+- [x] **T1.7 测试脚手架 `test/helpers.ts`**
   - `createTestApp(overrides?)`：使用 `:memory:` 数据库并执行迁移，限流默认放宽（D18），返回 `app`。
   - 常用辅助函数：`setupAdmin(app)`、`registerUser(app, …)`、`login(app, …)` 返回 Cookie 字符串、`authed(app, cookie)` 包装 `inject`。
   - 写一个 `system.test.ts`，验证 `GET /api/health` 返回 200。
