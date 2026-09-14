@@ -523,21 +523,21 @@ type RegistrationSettings = {
 
 ### 阶段 4：管理接口与 CLI
 
-- [ ] **T4.1 用户管理路由**（`routes/admin.ts`、`services/users.ts`）
+- [x] **T4.1 用户管理路由**（`routes/admin.ts`、`services/users.ts`）
   - 按 §3.5「管理」部分实现 `GET/PATCH/PUT/DELETE /api/admin/users…`。
   - `clipCount` 用子查询统计未软删除的条目。
 
-- [ ] **T4.2 注册设置路由**
+- [x] **T4.2 注册设置路由**
   - `GET/PATCH /api/admin/settings`、`POST /api/admin/settings/invite-code`。
   - 打开注册时自动生成邀请码的逻辑放在 `services/settings.ts` 里，不要写在路由中。
 
-- [ ] **T4.3 运维 CLI `src/cli.ts`**
+- [x] **T4.3 运维 CLI `src/cli.ts`**
   - 用法：`node dist/cli.js reset-password <username>`（开发时可用 `tsx src/cli.ts …`）。
   - 行为：按用户名查找用户（不区分大小写）→ 生成 16 位随机密码（字母和数字）→ 更新哈希 → 删除该用户所有会话 → 在终端打印新密码。
   - 用户不存在、参数缺失、命令未知时：打印用法说明，以退出码 1 退出。
   - 复用 `config.ts` 和 `db/client.ts`，执行前先跑迁移。
 
-- [ ] **T4.4 测试 `test/admin.test.ts`**，至少覆盖：
+- [x] **T4.4 测试 `test/admin.test.ts`**，至少覆盖：
   - [ ] 普通用户访问任何 `/api/admin/*` → 403；未登录 → 401。
   - [ ] 用户列表：管理员排第一；`clipCount` 不包含软删除的条目。
   - [ ] 停用：用户已有的 Cookie 立刻变为 401；密码正确时登录返回 403；重新启用后可以登录。

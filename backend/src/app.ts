@@ -14,6 +14,7 @@ import { registerAuth } from "./plugins/auth.js";
 import { registerOriginCheck } from "./plugins/origin-check.js";
 import { registerWeb } from "./plugins/web.js";
 import { authRoutes } from "./routes/auth.js";
+import { adminRoutes } from "./routes/admin.js";
 import { clipsRoutes } from "./routes/clips.js";
 import { systemRoutes } from "./routes/system.js";
 
@@ -119,6 +120,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(systemRoutes);
       await api.register(authRoutes);
       await api.register(clipsRoutes);
+      await api.register(adminRoutes);
     },
     { prefix: "/api" },
   );
