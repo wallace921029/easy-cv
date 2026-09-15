@@ -57,7 +57,7 @@ export default function SetupPage() {
   });
 
   return (
-    <AuthLayout title={strings.auth.setupTitle} subtitle={strings.auth.setupSubtitle}>
+    <AuthLayout title={strings.auth.setupTitle}>
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup>
           <Field>

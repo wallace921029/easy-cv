@@ -55,7 +55,6 @@ export const strings = {
     inviteCode: "邀请码",
     initCode: "初始化码",
     setupTitle: "创建管理员账户",
-    setupSubtitle: "初始化码来自服务器 .env 中的 ADMIN_INVITE_CODE",
     setupSubmit: "创建并进入",
     noAccount: "没有账户？注册",
     hasAccount: "已有账户？登录",
