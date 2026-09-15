@@ -11,15 +11,17 @@ import {
 export function SearchBox({
   value,
   onChange,
+  size = "default",
 }: {
   value: string;
   onChange: (value: string) => void;
+  size?: "default" | "sm" | "lg";
 }) {
   const [focused, setFocused] = useState(false);
   return (
-    <InputGroup>
+    <InputGroup size={size}>
       <InputGroupAddon>
-        <SearchIcon />
+        <SearchIcon className="size-4" />
       </InputGroupAddon>
       <InputGroupInput
         value={value}
@@ -38,8 +40,12 @@ export function SearchBox({
       />
       {value ? (
         <InputGroupAddon align="inline-end">
-          <InputGroupButton aria-label={strings.clips.clearSearch} onClick={() => onChange("")}>
-            <XIcon />
+          <InputGroupButton
+            size="icon-sm"
+            aria-label={strings.clips.clearSearch}
+            onClick={() => onChange("")}
+          >
+            <XIcon className="size-4" />
           </InputGroupButton>
         </InputGroupAddon>
       ) : null}

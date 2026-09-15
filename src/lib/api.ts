@@ -72,12 +72,12 @@ function toApiError(err: unknown): ApiError {
       return new ApiError(
         err.response.status,
         data?.error?.code ?? "INTERNAL_ERROR",
-        data?.error?.message ?? "请求失败",
+        data?.error?.message ?? "Request failed",
       );
     }
-    return new ApiError(0, "NETWORK_ERROR", "网络异常，请重试");
+    return new ApiError(0, "NETWORK_ERROR", "Network error");
   }
-  return new ApiError(0, "NETWORK_ERROR", "网络异常，请重试");
+  return new ApiError(0, "NETWORK_ERROR", "Network error");
 }
 
 type QueryParams = Record<string, string | number | undefined>;

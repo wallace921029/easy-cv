@@ -7,11 +7,11 @@ import { api } from "@/lib/api";
 import { zodResolver } from "@/lib/form";
 import { errorMessage, strings } from "@/lib/strings";
 import {
-  confirmPasswordIssue,
   confirmPasswordRefinement,
-  inviteCodeInputSchema,
-  passwordSchema,
-  usernameSchema,
+  getConfirmPasswordIssue,
+  getInviteCodeInputSchema,
+  getPasswordSchema,
+  getUsernameSchema,
 } from "@/lib/validation";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { PasswordInput } from "@/components/app/password-input";
@@ -21,16 +21,17 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useSystemStatus } from "@/queries/system";
 
-const formSchema = z
-  .object({
-    username: usernameSchema,
-    password: passwordSchema,
-    confirmPassword: z.string(),
-    inviteCode: inviteCodeInputSchema,
-  })
-  .refine(confirmPasswordRefinement, confirmPasswordIssue);
+const getFormSchema = () =>
+  z
+    .object({
+      username: getUsernameSchema(),
+      password: getPasswordSchema(),
+      confirmPassword: z.string(),
+      inviteCode: getInviteCodeInputSchema(),
+    })
+    .refine(confirmPasswordRefinement, getConfirmPasswordIssue());
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function RegisterPage() {
   const navigate = useNavigate();
@@ -43,7 +44,7 @@ export default function RegisterPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(getFormSchema),
     defaultValues: {
       username: "",
       password: "",

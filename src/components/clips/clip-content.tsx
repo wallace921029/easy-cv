@@ -43,7 +43,7 @@ export function ClipContent({
           {renderRichText(shown, keyword)}
         </div>
         {!expanded && overflowing ? (
-          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-8 bg-gradient-to-t from-card to-transparent" />
+          <div className="pointer-events-none absolute inset-x-0 bottom-0 h-10 bg-gradient-to-t from-card via-card/80 to-transparent" />
         ) : null}
       </div>
       {overflowing || expanded ? (

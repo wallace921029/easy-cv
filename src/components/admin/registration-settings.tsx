@@ -107,6 +107,8 @@ export function RegistrationSettings() {
             <div className="flex flex-col gap-2">
               <div className="flex items-center gap-2">
                 <Input
+                  size="sm"
+                  className="max-w-xs"
                   value={editValue}
                   onChange={(e) => {
                     setEditValue(e.target.value);
@@ -126,7 +128,7 @@ export function RegistrationSettings() {
             </div>
           ) : (
             <div className="flex flex-wrap items-center gap-2">
-              <code className="rounded-md border bg-muted px-3 py-1.5 font-mono text-sm tracking-wider">
+              <code className="rounded-xl border border-white/40 dark:border-white/10 bg-white/40 dark:bg-white/5 backdrop-blur-md px-3 py-1.5 font-mono text-sm tracking-wider shadow-xs">
                 {formatInviteCode(settings.inviteCode)}
               </code>
               <Button

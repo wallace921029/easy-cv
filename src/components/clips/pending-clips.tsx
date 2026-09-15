@@ -37,7 +37,7 @@ export function PendingClips({
       {items.map((item) => (
         <Card
           key={item.tempId}
-          className={cn(item.status === "failed" && "border-destructive")}
+          className={cn(item.status === "failed" && "border-destructive/60 ring-1 ring-destructive/20")}
         >
           <CardContent className="flex flex-col gap-2">
             {item.name ? (

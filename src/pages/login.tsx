@@ -6,7 +6,7 @@ import { z } from "zod";
 import { api } from "@/lib/api";
 import { zodResolver } from "@/lib/form";
 import { errorMessage, strings } from "@/lib/strings";
-import { usernameSchema } from "@/lib/validation";
+import { getUsernameSchema } from "@/lib/validation";
 import { sanitizeRedirect } from "@/components/app/route-guard";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { PasswordInput } from "@/components/app/password-input";
@@ -16,12 +16,13 @@ import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 import { useSystemStatus } from "@/queries/system";
 
-const formSchema = z.object({
-  username: usernameSchema,
-  password: z.string().min(1, "请输入密码"),
-});
+const getFormSchema = () =>
+  z.object({
+    username: getUsernameSchema(),
+    password: z.string().min(1, strings.validation.passwordRequired),
+  });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -34,7 +35,7 @@ export default function LoginPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(getFormSchema),
     defaultValues: { username: "", password: "" },
   });
 

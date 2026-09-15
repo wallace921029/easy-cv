@@ -2,8 +2,11 @@ import type { FieldErrors, FieldValues, Path, Resolver } from "react-hook-form";
 import type { ZodType } from "zod";
 
 // D10: a dozen-line zod resolver instead of @hookform/resolvers.
-export function zodResolver<T extends FieldValues>(schema: ZodType<T>): Resolver<T> {
+export function zodResolver<T extends FieldValues>(
+  schemaOrFactory: ZodType<T> | (() => ZodType<T>),
+): Resolver<T> {
   return async (values) => {
+    const schema = typeof schemaOrFactory === "function" ? schemaOrFactory() : schemaOrFactory;
     const parsed = schema.safeParse(values);
     if (parsed.success) {
       return { values: parsed.data, errors: {} };

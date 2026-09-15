@@ -64,7 +64,7 @@ export function UsersTable() {
   };
 
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto rounded-2xl border border-white/60 dark:border-white/10 bg-card backdrop-blur-xl p-1 shadow-[0_8px_30px_rgb(0,0,0,0.04)] dark:shadow-[0_8px_30px_rgb(0,0,0,0.25)]">
       <Table>
         <TableHeader>
           <TableRow>
@@ -104,7 +104,7 @@ export function UsersTable() {
                   {!isAdmin ? (
                     <DropdownMenu>
                       <DropdownMenuTrigger
-                        render={<Button variant="ghost" size="icon-sm" aria-label="更多操作" />}
+                        render={<Button variant="ghost" size="icon-sm" aria-label={strings.common.moreActions} />}
                       >
                         <MoreHorizontalIcon />
                       </DropdownMenuTrigger>

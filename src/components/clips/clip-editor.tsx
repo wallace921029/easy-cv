@@ -147,7 +147,7 @@ export function ClipEditor({
 
   const body = (
     <div
-      className="flex flex-col gap-3"
+      className="flex flex-col gap-3 min-w-0 w-full"
       onKeyDown={(e) => {
         if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
           e.preventDefault();
@@ -155,7 +155,7 @@ export function ClipEditor({
         }
       }}
     >
-      <Field>
+      <Field className="w-full min-w-0">
         <FieldLabel htmlFor="clip-name">{strings.clips.nameLabel}</FieldLabel>
         <Input
           id="clip-name"
@@ -168,6 +168,7 @@ export function ClipEditor({
           placeholder={strings.clips.namePlaceholder}
           autoComplete="off"
           maxLength={64}
+          className="w-full min-w-0"
         />
       </Field>
       <Textarea
@@ -179,9 +180,9 @@ export function ClipEditor({
         }}
         placeholder={strings.clips.editorPlaceholder}
         rows={6}
-        className="max-h-[50vh] resize-none"
+        className="max-h-[42vh] min-h-28 w-full min-w-0 resize-none overflow-y-auto break-all [overflow-wrap:anywhere]"
       />
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between shrink-0">
         <span className="text-xs text-muted-foreground">
           {strings.clips.charCount(Array.from(content).length)}
         </span>
@@ -212,22 +213,24 @@ export function ClipEditor({
     <>
       {isMobile ? (
         <Drawer open={open} onOpenChange={handleOpenChange}>
-          <DrawerContent>
+          <DrawerContent className="max-h-[calc(100dvh-2rem)]">
             <DrawerHeader>
               <DrawerTitle>{title}</DrawerTitle>
             </DrawerHeader>
-            <div className="px-4">{body}</div>
+            <div className="min-h-0 flex-1 overflow-y-auto px-4 py-1">{body}</div>
             <DrawerFooter>{footer}</DrawerFooter>
           </DrawerContent>
         </Drawer>
       ) : (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-          <DialogContent>
+          <DialogContent className="sm:max-w-lg">
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription className="sr-only">{title}</DialogDescription>
             </DialogHeader>
-            {body}
+            <div className="min-h-0 flex-1 overflow-y-auto -mr-1.5 pr-1.5">
+              {body}
+            </div>
             <DialogFooter>{footer}</DialogFooter>
           </DialogContent>
         </Dialog>

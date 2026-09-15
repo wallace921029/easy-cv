@@ -1,38 +1,12 @@
-import { PlusIcon } from "lucide-react";
-import { strings } from "@/lib/strings";
-import { Button } from "@/components/ui/button";
 import { Logo } from "./logo";
 import { UserMenu } from "./user-menu";
-import { SearchBox } from "@/components/clips/search-box";
 
-export function AppHeader({
-  searchValue,
-  onSearchChange,
-  onNewClip,
-}: {
-  searchValue: string;
-  onSearchChange: (value: string) => void;
-  onNewClip: () => void;
-}) {
+export function AppHeader() {
   return (
-    <header className="sticky top-0 z-30 border-b bg-background/80 backdrop-blur">
-      <div className="mx-auto flex max-w-3xl flex-col gap-2 px-4 py-2 md:h-14 md:flex-row md:items-center md:gap-3 md:py-0">
-        <div className="flex items-center justify-between md:contents">
-          <Logo />
-          <div className="md:hidden">
-            <UserMenu />
-          </div>
-        </div>
-        <div className="md:min-w-0 md:flex-1">
-          <SearchBox value={searchValue} onChange={onSearchChange} />
-        </div>
-        <div className="hidden items-center gap-2 md:flex">
-          <Button size="sm" onClick={onNewClip}>
-            <PlusIcon />
-            {strings.clips.new}
-          </Button>
-          <UserMenu />
-        </div>
+    <header className="sticky top-0 z-30 border-b border-white/20 dark:border-white/10 bg-background/65 dark:bg-background/60 backdrop-blur-2xl backdrop-saturate-180 shadow-[0_4px_20px_rgba(0,0,0,0.02)] dark:shadow-[0_4px_20px_rgba(0,0,0,0.25)] transition-all">
+      <div className="mx-auto flex h-14 max-w-3xl items-center justify-between px-4">
+        <Logo />
+        <UserMenu />
       </div>
     </header>
   );

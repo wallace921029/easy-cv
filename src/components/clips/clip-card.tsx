@@ -84,7 +84,7 @@ export function ClipCard({
       ref={ref}
       onClick={handleCardClick}
       className={cn(
-        "cursor-pointer transition-shadow hover:shadow-sm",
+        "cursor-pointer transition-all duration-200 hover:-translate-y-0.5 hover:shadow-[0_14px_36px_rgba(0,0,0,0.07)] dark:hover:shadow-[0_14px_36px_rgba(0,0,0,0.4)] hover:border-white/90 dark:hover:border-white/20 active:translate-y-0",
         highlighted && "border-primary/60 ring-2 ring-primary/30",
       )}
     >
@@ -123,11 +123,11 @@ export function ClipCard({
               aria-label={strings.clips.copy}
               onClick={handleCopy}
             >
-              {copied ? <CheckIcon className="text-green-600" /> : <CopyIcon />}
+              {copied ? <CheckIcon className="text-emerald-500 dark:text-emerald-400" /> : <CopyIcon />}
             </Button>
             <DropdownMenu>
               <DropdownMenuTrigger
-                render={<Button variant="ghost" size="icon-sm" aria-label="更多操作" />}
+                render={<Button variant="ghost" size="icon-sm" aria-label={strings.common.moreActions} />}
               >
                 <MoreHorizontalIcon />
               </DropdownMenuTrigger>

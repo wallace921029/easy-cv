@@ -19,7 +19,9 @@ import { usePasteToCreate } from "@/hooks/use-paste-to-create";
 import { AppHeader } from "@/components/app/app-header";
 import { ClipEditor } from "@/components/clips/clip-editor";
 import { ClipList } from "@/components/clips/clip-list";
+import { NewClipButton } from "@/components/clips/new-clip-button";
 import { NewClipFab } from "@/components/clips/new-clip-fab";
+import { SearchBox } from "@/components/clips/search-box";
 import { makePendingClip, type PendingClip } from "@/components/clips/pending-clips";
 
 export default function HomePage() {
@@ -130,12 +132,16 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen">
-      <AppHeader
-        searchValue={searchInput}
-        onSearchChange={setSearchInput}
-        onNewClip={() => setEditor({ open: true, clip: null, initialContent: "" })}
-      />
-      <main className="mx-auto max-w-3xl px-4 pt-4 pb-24 md:pb-10">
+      <AppHeader />
+      <main className="mx-auto max-w-3xl px-4 pt-4 sm:pt-6 pb-24 md:pb-10">
+        <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
+          <div className="min-w-0 flex-1">
+            <SearchBox value={searchInput} onChange={setSearchInput} />
+          </div>
+          <NewClipButton
+            onClick={() => setEditor({ open: true, clip: null, initialContent: "" })}
+          />
+        </div>
         <ClipList
           q={q}
           searching={searching}

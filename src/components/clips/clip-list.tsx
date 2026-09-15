@@ -128,7 +128,7 @@ export function ClipList({
           ) : (
             <>
               <EmptyTitle className="text-base">
-                按{" "}
+                {strings.clips.press}{" "}
                 <KbdGroup>
                   <Kbd>{modKeyLabel}</Kbd>
                   <Kbd>V</Kbd>

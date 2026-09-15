@@ -8,17 +8,21 @@ import {
 } from "@/components/ui/input-group";
 import { strings } from "@/lib/strings";
 
-export function PasswordInput(props: React.ComponentProps<typeof InputGroupInput>) {
+export function PasswordInput({
+  size = "default",
+  ...props
+}: React.ComponentProps<typeof InputGroupInput>) {
   const [visible, setVisible] = useState(false);
   return (
-    <InputGroup>
-      <InputGroupInput type={visible ? "text" : "password"} {...props} />
+    <InputGroup size={size}>
+      <InputGroupInput size={size} type={visible ? "text" : "password"} {...props} />
       <InputGroupAddon align="inline-end">
         <InputGroupButton
+          size={size === "sm" ? "icon-xs" : "icon-sm"}
           aria-label={visible ? strings.auth.hidePassword : strings.auth.showPassword}
           onClick={() => setVisible((v) => !v)}
         >
-          {visible ? <EyeOffIcon /> : <EyeIcon />}
+          {visible ? <EyeOffIcon className="size-4" /> : <EyeIcon className="size-4" />}
         </InputGroupButton>
       </InputGroupAddon>
     </InputGroup>

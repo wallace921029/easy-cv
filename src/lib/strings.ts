@@ -1,182 +1,55 @@
 import { ApiError } from "./api";
+import { zh, type StringsDictionary } from "./i18n/zh";
+import { en } from "./i18n/en";
 
-// All UI copy lives here (Simplified Chinese only for v0.x) so a future i18n
-// pass has a single place to work on.
+export type { StringsDictionary };
+export type ResolvedLanguage = "en" | "zh";
 
-export const strings = {
-  appName: "Easy CV",
-  common: {
-    save: "保存",
-    cancel: "取消",
-    delete: "删除",
-    edit: "编辑",
-    retry: "重试",
-    remove: "移除",
-    copy: "复制",
-    generate: "生成",
-    confirm: "确认",
-    backHome: "返回主页",
-    copied: "已复制",
-    saved: "已保存",
-    deleted: "已删除",
-    undo: "撤销",
-    loadMore: "加载更多",
-    noMore: "没有更多了",
-    loading: "加载中…",
-    never: "—",
-  },
-  validation: {
-    username: "用户名为 3–32 位，只允许字母、数字、_ 和 -",
-    passwordMin: "密码至少 8 位",
-    passwordMax: "密码最多 128 位",
-    passwordMismatch: "两次输入的密码不一致",
-    inviteCodeRequired: "请输入邀请码",
-    initCodeRequired: "请输入初始化码",
-    contentRequired: "内容不能为空",
-    inviteCodeFormat: "邀请码需为 6–32 位字母或数字",
-  },
-  errors: {
-    network: "网络异常，请重试",
-    sessionExpired: "登录已过期，请重新登录",
-    loadFailed: "加载失败，请稍后重试",
-    copyFailed: "复制失败，请手动选择复制",
-    readClipboardFailed: "读取剪贴板失败，请检查浏览器授权",
-  },
-  auth: {
-    login: "登录",
-    register: "注册",
-    logout: "退出登录",
-    username: "用户名",
-    password: "密码",
-    confirmPassword: "确认密码",
-    currentPassword: "当前密码",
-    newPassword: "新密码",
-    confirmNewPassword: "确认新密码",
-    inviteCode: "邀请码",
-    initCode: "初始化码",
-    setupTitle: "创建管理员账户",
-    setupSubmit: "创建并进入",
-    noAccount: "没有账户？注册",
-    hasAccount: "已有账户？登录",
-    registrationClosed: "当前未开放注册，请联系管理员",
-    registerTitle: "注册账户",
-    welcome: "欢迎回来",
-    showPassword: "显示密码",
-    hidePassword: "隐藏密码",
-  },
-  clips: {
-    new: "新建",
-    searchPlaceholder: "搜索…",
-    pinnedGroup: "已置顶",
-    recentGroup: "最近",
-    expand: "展开",
-    collapse: "收起",
-    edited: "已编辑",
-    copy: "复制",
-    pin: "置顶",
-    unpin: "取消置顶",
-    charCount: (n: number) => `${n} 字`,
-    pasteToSave: "粘贴，确认后保存",
-    nameLabel: "名称（可选）",
-    namePlaceholder: "方便辨认，例如：公司地址",
-    emptyDesktopHint: "或点击「新建」",
-    emptyMobileHint: "点击右下角 + 开始",
-    noSearchResults: (q: string) => `没有找到包含"${q}"的内容`,
-    onlyTextSupported: "目前只支持保存文本",
-    clipboardEmpty: "剪贴板中没有可保存的内容",
-    alreadyExists: "内容已存在，已移到最前",
-    saveFailed: "保存失败",
-    textTooLarge: (maxMb: number) => `文本超过 ${maxMb} MB 上限`,
-    discardChanges: "放弃未保存的内容？",
-    discardChangesHint: "关闭后将丢失当前输入的内容。",
-    readClipboard: "读取剪贴板",
-    editorNewTitle: "新建条目",
-    editorEditTitle: "编辑条目",
-    editorPlaceholder: "输入或粘贴文本…",
-    saving: "保存中…",
-    clearSearch: "清空搜索",
-  },
-  settings: {
-    title: "账户设置",
-    changePassword: "修改密码",
-    changePasswordSubmit: "修改密码",
-    passwordChanged: "密码已修改，其他设备已退出登录",
-    appearance: "外观",
-    themeSystem: "跟随系统",
-    themeLight: "浅色",
-    themeDark: "深色",
-  },
-  admin: {
-    title: "管理后台",
-    usersTab: "用户管理",
-    registrationTab: "注册设置",
-    username: "用户名",
-    role: "角色",
-    status: "状态",
-    clipCount: "条目数",
-    createdAt: "注册时间",
-    lastLoginAt: "最近登录",
-    roleAdmin: "管理员",
-    roleUser: "用户",
-    statusActive: "正常",
-    statusDisabled: "已停用",
-    disable: "停用",
-    enable: "启用",
-    disableConfirmTitle: "停用该用户？",
-    disableConfirmHint: "停用后该用户将立即退出所有设备，且无法登录。数据会保留。",
-    resetPassword: "重置密码",
-    resetPasswordTitle: "重置密码",
-    newPasswordLabel: "新密码",
-    resetPasswordDone: "密码已重置",
-    resetPasswordOnceHint: "请立即告知用户，此密码不会再次显示。",
-    deleteUser: "删除用户",
-    deleteUserTitle: "删除用户",
-    deleteUserHint: (count: number) =>
-      `将永久删除该用户及其全部 ${count} 条内容，不可恢复。`,
-    deleteUserConfirmHint: (username: string) => `请输入用户名 ${username} 以确认删除`,
-    userDeleted: "用户已删除",
-    userDisabled: "已停用",
-    userEnabled: "已启用",
-    passwordReset: "密码已重置",
-    registrationOpen: "开放注册",
-    inviteCode: "邀请码",
-    inviteCodeEmpty: "尚未生成，开放注册时会自动生成",
-    inviteCodeUnavailable: "注册已关闭，邀请码暂不可用",
-    copyInviteCode: "复制邀请码",
-    copyRegisterLink: "复制注册链接",
-    refreshCode: "刷新",
-    editCode: "修改",
-    refreshConfirmTitle: "刷新邀请码？",
-    refreshConfirmHint: "旧邀请码将立即失效。",
-    registrationSaved: "设置已保存",
-  },
-} as const;
-
-const ERROR_MESSAGES: Record<string, string> = {
-  NETWORK_ERROR: strings.errors.network,
-  VALIDATION_ERROR: "请求参数不正确",
-  EMPTY_CONTENT: "内容不能为空",
-  WRONG_PASSWORD: "当前密码错误",
-  UNAUTHORIZED: "未登录或登录已过期",
-  INVALID_CREDENTIALS: "用户名或密码错误",
-  FORBIDDEN: "没有权限执行此操作",
-  ORIGIN_MISMATCH: "请求来源不合法",
-  ACCOUNT_DISABLED: "账户已被停用，请联系管理员",
-  INIT_CODE_INVALID: "初始化码错误",
-  REGISTRATION_CLOSED: strings.auth.registrationClosed,
-  INVITE_CODE_INVALID: "邀请码无效",
-  CANNOT_MODIFY_ADMIN: "不能对管理员账户执行此操作",
-  NOT_FOUND: "内容不存在或已被删除",
-  ALREADY_INITIALIZED: "系统已完成初始化",
-  USERNAME_TAKEN: "用户名已存在",
-  TEXT_TOO_LARGE: "文本超过大小上限",
-  RATE_LIMITED: "操作太频繁，请稍后再试",
-  INTERNAL_ERROR: "服务器内部错误",
+const dictionaries: Record<ResolvedLanguage, StringsDictionary> = {
+  zh,
+  en,
 };
 
-export function errorMessage(err: unknown): string {
-  if (err instanceof ApiError) {
-    return ERROR_MESSAGES[err.code] ?? err.message;
+function getInitialLanguage(): ResolvedLanguage {
+  try {
+    const stored = localStorage.getItem("ecv-lang");
+    if (stored === "zh" || stored === "en") {
+      return stored;
+    }
+  } catch {
+    // fallback
   }
-  return "操作失败，请重试";
+  if (typeof navigator !== "undefined") {
+    const primary = (navigator.languages?.[0] || navigator.language || "").toLowerCase();
+    if (primary.startsWith("zh")) {
+      return "zh";
+    }
+  }
+  return "en";
+}
+
+let currentLanguage: ResolvedLanguage = getInitialLanguage();
+
+export function setStringsLanguage(lang: ResolvedLanguage): void {
+  currentLanguage = lang;
+}
+
+export function getActiveStrings(): StringsDictionary {
+  return dictionaries[currentLanguage] ?? zh;
+}
+
+export const strings: StringsDictionary = new Proxy({} as StringsDictionary, {
+  get(_target, prop) {
+    return getActiveStrings()[prop as keyof StringsDictionary];
+  },
+});
+
+export function errorMessage(err: unknown): string {
+  const active = getActiveStrings();
+  if (err instanceof ApiError) {
+    return (
+      active.apiErrors[err.code as keyof typeof active.apiErrors] ?? err.message
+    );
+  }
+  return active.errors.operationFailed;
 }

@@ -4,8 +4,9 @@ import { z } from "zod";
 import { api } from "@/lib/api";
 import { zodResolver } from "@/lib/form";
 import { errorMessage, strings } from "@/lib/strings";
-import { passwordSchema } from "@/lib/validation";
+import { getPasswordSchema } from "@/lib/validation";
 import { useTheme, type Theme } from "@/components/app/theme-provider";
+import { useI18n, type Language } from "@/components/app/i18n-provider";
 import { PageHeader } from "@/components/app/page-header";
 import { PasswordInput } from "@/components/app/password-input";
 import { Button } from "@/components/ui/button";
@@ -15,27 +16,23 @@ import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Spinner } from "@/components/ui/spinner";
 import { toast } from "@/components/ui/toast";
 
-const formSchema = z
-  .object({
-    currentPassword: z.string().min(1, "请输入当前密码"),
-    newPassword: passwordSchema,
-    confirmNewPassword: z.string(),
-  })
-  .refine((v) => v.newPassword === v.confirmNewPassword, {
-    path: ["confirmNewPassword"],
-    message: strings.validation.passwordMismatch,
-  });
+const getFormSchema = () =>
+  z
+    .object({
+      currentPassword: z.string().min(1, strings.validation.currentPasswordRequired),
+      newPassword: getPasswordSchema(),
+      confirmNewPassword: z.string(),
+    })
+    .refine((v) => v.newPassword === v.confirmNewPassword, {
+      path: ["confirmNewPassword"],
+      message: strings.validation.passwordMismatch,
+    });
 
-type FormValues = z.infer<typeof formSchema>;
-
-const THEME_OPTIONS: { value: Theme; label: string }[] = [
-  { value: "system", label: strings.settings.themeSystem },
-  { value: "light", label: strings.settings.themeLight },
-  { value: "dark", label: strings.settings.themeDark },
-];
+type FormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function SettingsPage() {
   const { theme, setTheme } = useTheme();
+  const { language, setLanguage } = useI18n();
   const [formError, setFormError] = useState<string | null>(null);
   const {
     register,
@@ -43,9 +40,21 @@ export default function SettingsPage() {
     reset,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(getFormSchema),
     defaultValues: { currentPassword: "", newPassword: "", confirmNewPassword: "" },
   });
+
+  const themeOptions: { value: Theme; label: string }[] = [
+    { value: "system", label: strings.settings.themeSystem },
+    { value: "light", label: strings.settings.themeLight },
+    { value: "dark", label: strings.settings.themeDark },
+  ];
+
+  const languageOptions: { value: Language; label: string }[] = [
+    { value: "system", label: strings.settings.langSystem },
+    { value: "zh", label: strings.settings.langZh },
+    { value: "en", label: strings.settings.langEn },
+  ];
 
   const onSubmit = handleSubmit(async (values) => {
     setFormError(null);
@@ -122,8 +131,34 @@ export default function SettingsPage() {
               onValueChange={(value) => setTheme(value as Theme)}
               className="flex flex-wrap gap-4"
             >
-              {THEME_OPTIONS.map((option) => (
-                <label key={option.value} className="flex items-center gap-2 text-sm">
+              {themeOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors hover:bg-white/40 dark:hover:bg-white/5"
+                >
+                  <RadioGroupItem value={option.value} />
+                  {option.label}
+                </label>
+              ))}
+            </RadioGroup>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader>
+            <CardTitle>{strings.settings.language}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <RadioGroup
+              value={language}
+              onValueChange={(value) => setLanguage(value as Language)}
+              className="flex flex-wrap gap-4"
+            >
+              {languageOptions.map((option) => (
+                <label
+                  key={option.value}
+                  className="flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm transition-colors hover:bg-white/40 dark:hover:bg-white/5"
+                >
                   <RadioGroupItem value={option.value} />
                   {option.label}
                 </label>

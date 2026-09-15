@@ -7,11 +7,11 @@ import { api } from "@/lib/api";
 import { zodResolver } from "@/lib/form";
 import { errorMessage, strings } from "@/lib/strings";
 import {
-  confirmPasswordIssue,
   confirmPasswordRefinement,
-  initCodeInputSchema,
-  passwordSchema,
-  usernameSchema,
+  getConfirmPasswordIssue,
+  getInitCodeInputSchema,
+  getPasswordSchema,
+  getUsernameSchema,
 } from "@/lib/validation";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { PasswordInput } from "@/components/app/password-input";
@@ -20,16 +20,17 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
 
-const formSchema = z
-  .object({
-    username: usernameSchema,
-    password: passwordSchema,
-    confirmPassword: z.string(),
-    initCode: initCodeInputSchema,
-  })
-  .refine(confirmPasswordRefinement, confirmPasswordIssue);
+const getFormSchema = () =>
+  z
+    .object({
+      username: getUsernameSchema(),
+      password: getPasswordSchema(),
+      confirmPassword: z.string(),
+      initCode: getInitCodeInputSchema(),
+    })
+    .refine(confirmPasswordRefinement, getConfirmPasswordIssue());
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof getFormSchema>>;
 
 export default function SetupPage() {
   const navigate = useNavigate();
@@ -40,7 +41,7 @@ export default function SetupPage() {
     handleSubmit,
     formState: { errors, isSubmitting },
   } = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(getFormSchema),
     defaultValues: { username: "", password: "", confirmPassword: "", initCode: "" },
   });
 
