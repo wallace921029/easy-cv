@@ -757,7 +757,7 @@ type RegistrationSettings = {
 
 ### 阶段 9：部署
 
-- [ ] **T9.1 `Dockerfile`（多阶段构建，基础镜像全部使用 `node:24-slim`）**
+- [x] **T9.1 `Dockerfile`（多阶段构建，基础镜像全部使用 `node:24-slim`）**
   1. `web` 阶段：`WORKDIR /app`，复制根目录的 `package.json`、`package-lock.json` → `npm ci` → 复制前端源码（`index.html`、`public/`、`src/`、各个 `tsconfig*.json`、`vite.config.ts`、`components.json`）→ `npm run build`，产物在 `/app/dist`。
   2. `server` 阶段：`apt-get install -y --no-install-recommends python3 make g++`（原生模块预编译包不可用时的后备方案），`WORKDIR /app/backend`，复制 `backend/package*.json` → `npm ci` → 复制 `backend/` 其余内容 → `npm run build` → `npm prune --omit=dev`。
   3. 运行阶段：
@@ -768,13 +768,14 @@ type RegistrationSettings = {
      - `HEALTHCHECK` 使用 `node -e "fetch('http://127.0.0.1:8000/api/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"`；
      - `CMD ["node", "backend/dist/server.js"]`。
 
-- [ ] **T9.2 `docker-compose.yml`**
+- [x] **T9.2 `docker-compose.yml`**
   - 只有一个 `app` 服务：`build: .`、`image: easy-cv:latest`、`restart: unless-stopped`、`env_file: .env`。
   - 端口：`"${HOST_BIND:-0.0.0.0}:${HOST_PORT:-8000}:8000"`。
   - 数据卷：`./data:/app/data`。
   - 日志轮转：`logging.driver: json-file`，`max-size: 10m`，`max-file: 3`。
 
-- [ ] **T9.3 容器验证**
+- [x] **T9.3 容器验证**
+  > 偏离说明：「把 data/ 属主改为 root」在本机无法复现——macOS Docker Desktop 的 virtiofs 绑定挂载不映射属主。改为在宿主机把 data/ 设为只读（chmod 555）直接运行后端，确认启动时报出规定文案并以退出码 1 退出。Docker 内 root 属主场景需在 Linux 服务器上确认。
   - 在一个干净的目录中：`cp .env.example .env` 并填写 → `mkdir -p data` → `docker compose up -d --build`。
   - 检查：`docker compose ps` 显示 healthy；通过 `http://<本机局域网IP>:8000` 完成初始化并创建条目；`docker compose restart` 后数据仍在；`docker compose exec app node backend/dist/cli.js reset-password <username>` 可以正常运行。
   - 故意把 `data/` 的属主改为 root，确认启动日志中有 T1.3 规定的清晰报错。

@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    image: easy-cv:latest
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "${HOST_BIND:-0.0.0.0}:${HOST_PORT:-8000}:8000"
+    volumes:
+      - ./data:/app/data
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: "3"
