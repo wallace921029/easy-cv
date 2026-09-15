@@ -1,70 +1,73 @@
 # Easy CV
 
-自托管的个人在线文本剪贴板：在任意设备打开网页，⌘/Ctrl + V 即存，点一下即取。
+[English](README.md) | [简体中文](README.zh-CN.md)
 
-## 功能
+A self-hosted personal online text clipboard: open the web app on any device, press ⌘/Ctrl + V to save, and click to copy.
 
-- **粘贴即保存**：全局监听 `paste` 事件，无需确认；相同内容自动去重并移到最前
-- **点击即复制**：单击卡片复制全文（HTTP 下自动降级，无需 HTTPS）
-- **整理**：置顶、编辑、删除（5 秒内可撤销）、关键字搜索、无限滚动
-- **多设备**：页面切回前台时自动刷新
-- **多用户**：注册开关 + 邀请码；管理员可停用/启用、重置密码、删除用户（看不到他人内容）
-- **安全**：argon2id 密码哈希、HttpOnly 会话 Cookie、Origin 校验、限流、纯文本渲染防 XSS
+## Features
 
-## 技术栈
+- **Paste to Save**: Listens globally for `paste` events to bring up the editor prefilled and auto-focus the title. Duplicate content is automatically deduplicated and bumped to the top.
+- **Click to Copy**: Single-click on any clip card to copy its full content (with automatic fallback on plain HTTP, no HTTPS required).
+- **Optional Titles**: Support for optional clip names (up to 64 characters) for clean and organized lists.
+- **Organization**: Pinning, editing, deletion (with a 5-second undo toast), keyword search with highlighting, and infinite scrolling.
+- **Multi-device Sync**: Automatically refreshes when the page returns to the foreground.
+- **Multi-user Support**: Registration toggle + invite codes. Administrators can enable/disable, reset passwords, or delete users (admins cannot view other users' clips).
+- **Security & Privacy**: Argon2id password hashing, HttpOnly session cookies, Origin header verification, rate limiting, and plain-text rendering to prevent XSS.
 
-React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui（前端）；Fastify + Drizzle ORM + SQLite（后端）。生产环境只有一个容器、一个 SQLite 文件。
+## Tech Stack
 
-## 本地开发
+React 19 + TypeScript + Tailwind CSS v4 + shadcn/ui (Frontend); Fastify + Drizzle ORM + SQLite (Backend). Single container, single SQLite file in production.
 
-```bash
-npm install                     # 前端依赖
-npm --prefix backend install    # 后端依赖
-cp .env.example .env            # 修改 ADMIN_INVITE_CODE（至少 8 位）
-```
-
-开两个终端：
+## Local Development
 
 ```bash
-npm run dev:backend   # 后端 http://127.0.0.1:8000
-npm run dev           # 前端 http://localhost:5173（/api 已代理到后端）
+npm install                     # Frontend dependencies
+npm --prefix backend install    # Backend dependencies
+cp .env.example .env            # Configure ADMIN_INVITE_CODE (at least 8 characters)
 ```
 
-打开 http://localhost:5173 会跳转到 `/setup`，用 `.env` 里的 `ADMIN_INVITE_CODE` 完成初始化。
+Run in two separate terminals:
 
-## 测试与检查
+```bash
+npm run dev:backend   # Backend at http://127.0.0.1:8000
+npm run dev           # Frontend at http://localhost:5173 (/api is proxied to backend)
+```
 
-| 命令 | 说明 |
+Open http://localhost:5173 in your browser. It will redirect to `/setup`. Use the `ADMIN_INVITE_CODE` defined in `.env` to complete initialization.
+
+## Testing & Quality Checks
+
+| Command | Description |
 | --- | --- |
-| `npm run test:backend` | 后端测试（node:test，内存 SQLite） |
-| `npm --prefix backend run typecheck` | 后端类型检查 |
-| `npm run build` | 前端类型检查 + 生产构建 |
-| `npm run lint` | oxlint |
+| `npm run test:backend` | Backend tests (`node:test`, in-memory SQLite) |
+| `npm --prefix backend run typecheck` | Backend TypeScript check |
+| `npm run build` | Frontend TypeScript check + production build |
+| `npm run lint` | Oxlint linter |
 
-## 部署（Ubuntu 24.04）
+## Deployment (Ubuntu 24.04)
 
 ```bash
-# 安装 Docker（官方脚本）
+# Install Docker (official script)
 curl -fsSL https://get.docker.com | sh
 
-git clone <仓库地址> easy-cv && cd easy-cv
-cp .env.example .env    # 修改 ADMIN_INVITE_CODE
+git clone https://github.com/wallace921029/easy-cv.git && cd easy-cv
+cp .env.example .env    # Configure ADMIN_INVITE_CODE
 mkdir -p data
 docker compose up -d --build
 ```
 
-访问 `http://<服务器IP>:8000` 完成初始化（创建管理员）。初始化后 `ADMIN_INVITE_CODE` 即失效，可从 `.env` 删除。
+Visit `http://<SERVER_IP>:8000` to complete initialization (create admin account). Once initialized, `ADMIN_INVITE_CODE` is invalidated and can be removed from `.env`.
 
-### 接入 Nginx（可选，用于域名 + HTTPS）
+### Nginx Reverse Proxy (Optional, for Custom Domain & HTTPS)
 
-`.env` 中设置：
+Configure in `.env`:
 
-```
+```env
 TRUST_PROXY=true
 HOST_BIND=127.0.0.1
 ```
 
-Nginx 最小配置：
+Minimal Nginx configuration:
 
 ```nginx
 location / {
@@ -76,44 +79,44 @@ location / {
 client_max_body_size 4m;
 ```
 
-注意：`Host` 必须用 `$http_host`（保留端口号），否则非标准端口下 Origin 校验会失败；`client_max_body_size` 默认 1m，放不下 1 MB 的文本。
+> **Note**: `Host` must be `$http_host` (preserving the port number), otherwise Origin validation will fail on non-standard ports. The default Nginx `client_max_body_size` is 1m, which cannot handle 1 MB text clips.
 
-## 运维
+## Operations & Maintenance
 
 ```bash
-# 升级
+# Upgrade
 git pull && docker compose up -d --build
 
-# 备份：停止后复制整个 data/ 目录
+# Backup: stop the container and copy the data/ directory
 docker compose stop && cp -r data data.bak && docker compose start
 
-# 重置任意用户（含管理员）的密码，终端会打印一个新随机密码
+# Reset password for any user (including admin); prints a new random password
 docker compose exec app node backend/dist/cli.js reset-password <username>
 ```
 
-## 常见问题
+## FAQ
 
-**通过 HTTP（IP 直连）访问时为什么没有「读取剪贴板」按钮？**
-浏览器只在 HTTPS（安全上下文）下开放 `navigator.clipboard` 读取接口。HTTP 下该按钮自动隐藏；粘贴创建和点击复制不受影响（复制自动使用降级方案）。
+**Why is the "Read Clipboard" button hidden when accessing via plain HTTP (direct IP)?**  
+Browsers only expose the `navigator.clipboard.readText` API in secure contexts (HTTPS). Under plain HTTP, this button is automatically hidden. Paste-to-create (`Cmd/Ctrl + V`) and click-to-copy remain unaffected (copying uses an automatic fallback mechanism).
 
-**忘记管理员密码怎么办？**
-在服务器上执行 `docker compose exec app node backend/dist/cli.js reset-password admin`，用打印出的新密码登录。
+**What should I do if I forget the admin password?**  
+Run `docker compose exec app node backend/dist/cli.js reset-password admin` on your server and log in with the newly printed password.
 
-**启动报「数据目录不可写」？**
-容器内以 `node`（uid 1000）用户运行，`./data` 属主不对时会出现。执行 `sudo chown -R 1000:1000 ./data` 后重启。不要把 `data/` 放在 NFS 等网络文件系统上（SQLite 文件锁不可靠）。
+**"Data directory not writable" error on container startup?**  
+The container runs under the `node` user (UID 1000). If `./data` permissions are incorrect, run `sudo chown -R 1000:1000 ./data` and restart. Avoid placing `data/` on network file systems such as NFS (SQLite file locking may be unreliable).
 
-**浏览器控制台提示 Mixed Content / 资源被升级为 HTTPS？**
-应用本身通过 IP 以 HTTP 运行时不会强制 HTTPS。若接入 Nginx + HTTPS 后出现，检查是否同时保留了旧的 HTTP 书签；HSTS 交由 Nginx 管理。
+**Browser console reports Mixed Content or resources upgraded to HTTPS?**  
+The application does not enforce HTTPS when running directly over HTTP. If this occurs after configuring Nginx + HTTPS, check whether old HTTP bookmarks or links are being accessed. HSTS should be managed by Nginx.
 
-## 目录结构
+## Directory Structure
 
 ```text
 easy-cv/
-├── src/                  # 前端（React）
-├── backend/              # 后端（Fastify）
+├── src/                  # Frontend (React)
+├── backend/              # Backend (Fastify)
 │   ├── src/              #   routes / services / plugins / jobs / cli
-│   └── drizzle/          #   迁移（启动时自动执行）
-├── data/                 # SQLite 数据（运行时生成，git 忽略）
+│   └── drizzle/          #   Migrations (executed automatically on startup)
+├── data/                 # SQLite storage (generated at runtime, gitignored)
 ├── Dockerfile
 └── docker-compose.yml
 ```
