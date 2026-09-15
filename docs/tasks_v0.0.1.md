@@ -786,7 +786,7 @@ type RegistrationSettings = {
 
 ### 阶段 10：文档与整体验收
 
-- [ ] **T10.1 重写 `README.md`**
+- [x] **T10.1 重写 `README.md`**
   - 项目简介和功能列表。
   - 本地开发：`npm install`、`npm --prefix backend install`、复制 `.env.example` 为 `.env`，然后开两个终端分别运行 `npm run dev:backend` 和 `npm run dev`。
   - 测试与检查命令。
@@ -799,7 +799,7 @@ type RegistrationSettings = {
   - 升级、备份、重置密码的命令。
   - 常见问题：为什么通过 HTTP 访问时看不到「读取剪贴板」按钮；忘记管理员密码怎么办；数据目录权限报错怎么办。
 
-- [ ] **T10.2 按 [§5 验收清单](#5-端到端验收清单) 完整验收一遍**，把结果记录在本文件末尾的「验收记录」中（日期、浏览器、未通过的项目和原因）。
+- [x] **T10.2 按 [§5 验收清单](#5-端到端验收清单) 完整验收一遍**，把结果记录在本文件末尾的「验收记录」中（日期、浏览器、未通过的项目和原因）。
 
 ---
 
@@ -881,4 +881,4 @@ type RegistrationSettings = {
 
 | 日期 | 环境 / 浏览器 | 结果 | 未通过项与原因 |
 | --- | --- | --- | --- |
-| | | | |
+| 2026-09-15 | macOS 15 · Chrome 152（headless CDP 驱动，含移动端模拟）· Docker 29（compose 部署于干净目录） | 通过（后端 32 项测试 + 六组端到端脚本全绿） | ① 验收项「Docker 中把 data/ 属主改为 root 后的报错」无法在 macOS Docker Desktop 复现（virtiofs 不映射属主），已在宿主机以只读 data/ 验证报错文案正确，Docker 场景需到 Linux 服务器确认；②「在 Safari 上验证全局粘贴与复制」未自动化，需人工在 Safari 过一遍；③「相对时间停留 1 分钟后自动刷新」与「悬停显示完整时间」未自动化验证（实现为 60s 定时器 + tooltip），需人工抽查。 |
