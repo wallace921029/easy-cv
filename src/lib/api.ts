@@ -126,8 +126,9 @@ export const api = {
     list: (params: { cursor?: string; q?: string; limit?: number }) =>
       get<ClipListResponse>("/clips", params),
     pinned: () => get<ClipListResponse>("/clips", { pinned: "true" }),
-    create: (content: string) => post<CreateClipResponse>("/clips", { content }),
-    update: (id: string, body: { content?: string; pinned?: boolean }) =>
+    create: (content: string, name?: string | null) =>
+      post<CreateClipResponse>("/clips", { content, name: name ?? undefined }),
+    update: (id: string, body: { content?: string; pinned?: boolean; name?: string | null }) =>
       patch<ClipResponse>(`/clips/${id}`, body),
     remove: (id: string) => del(`/clips/${id}`),
     restore: (id: string) => post<ClipResponse>(`/clips/${id}/restore`),

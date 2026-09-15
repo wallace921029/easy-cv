@@ -4,7 +4,9 @@ import { strings } from "@/lib/strings";
 
 // Global paste-to-create. Listens to the paste event (not keystrokes) so
 // Cmd/Ctrl+V, the context menu and the browser menu all work, HTTPS or not.
-export function usePasteToCreate(onCreate: (content: string) => void): void {
+// The paste never saves directly: it opens the editor prefilled, and the user
+// confirms with 保存 / Cmd+Enter (or adds a name first).
+export function usePasteToCreate(onPasteText: (content: string) => void): void {
   useEffect(() => {
     const inEditable = (el: Element | null): boolean =>
       el instanceof HTMLElement &&
@@ -29,7 +31,7 @@ export function usePasteToCreate(onCreate: (content: string) => void): void {
       const text = data.getData("text/plain");
       if (/\S/.test(text)) {
         event.preventDefault();
-        onCreate(text);
+        onPasteText(text);
         return;
       }
       if (data.files.length > 0 || data.types.some((t) => t.startsWith("image/"))) {
@@ -40,5 +42,5 @@ export function usePasteToCreate(onCreate: (content: string) => void): void {
     };
     document.addEventListener("paste", handler);
     return () => document.removeEventListener("paste", handler);
-  }, [onCreate]);
+  }, [onPasteText]);
 }

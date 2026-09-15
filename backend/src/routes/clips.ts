@@ -8,6 +8,7 @@ import { toApiClip } from "../services/clips.js";
 
 const clipSchema = z.object({
   id: z.string(),
+  name: z.string().nullable(),
   content: z.string(),
   pinnedAt: z.number().int().nullable(),
   createdAt: z.number().int(),
@@ -27,15 +28,20 @@ const listResponseSchema = z.object({
   nextCursor: z.string().nullable().optional(),
 });
 
-const createBodySchema = z.object({ content: z.string() });
+const nameSchema = z.string().max(64).nullable().optional();
+
+const createBodySchema = z.object({ content: z.string(), name: nameSchema });
 const createResultSchema = z.object({ clip: clipSchema, deduplicated: z.boolean() });
 
 const patchBodySchema = z
   .object({
     content: z.string().optional(),
     pinned: z.boolean().optional(),
+    name: nameSchema,
   })
-  .refine((o) => o.content !== undefined || o.pinned !== undefined);
+  .refine(
+    (o) => o.content !== undefined || o.pinned !== undefined || o.name !== undefined,
+  );
 
 const idParamsSchema = z.object({ id: z.string().min(1) });
 const clipResultSchema = z.object({ clip: clipSchema });
@@ -86,6 +92,7 @@ export async function clipsRoutes(app: FastifyInstance): Promise<void> {
         app.db,
         user.id,
         request.body.content,
+        clipsService.normalizeClipName(request.body.name) ?? null,
         app.config.maxTextBytes,
       );
       return reply

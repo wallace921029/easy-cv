@@ -9,14 +9,15 @@ import { Spinner } from "@/components/ui/spinner";
 export type PendingClip = {
   tempId: number;
   content: string;
+  name: string | null;
   status: "saving" | "failed";
   error?: string;
 };
 
 let nextTempId = 1;
 
-export function makePendingClip(content: string): PendingClip {
-  return { tempId: nextTempId++, content, status: "saving" };
+export function makePendingClip(content: string, name: string | null = null): PendingClip {
+  return { tempId: nextTempId++, content, name, status: "saving" };
 }
 
 export function PendingClips({
@@ -39,6 +40,9 @@ export function PendingClips({
           className={cn(item.status === "failed" && "border-destructive")}
         >
           <CardContent className="flex flex-col gap-2">
+            {item.name ? (
+              <div className="text-sm leading-snug font-medium break-words">{item.name}</div>
+            ) : null}
             <div className="line-clamp-2 text-sm whitespace-pre-wrap break-words">
               {item.content}
             </div>

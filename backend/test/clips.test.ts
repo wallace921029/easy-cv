@@ -203,6 +203,77 @@ test("edit: bumps updatedAt only, allows duplicate content; pin toggling keeps u
   await close();
 });
 
+test("name: create/patch/search semantics", async () => {
+  const { app, db, close } = await createTestApp();
+  await setupAdmin(app);
+  const { cookie } = await makeUser(app, db, "alice");
+
+  const created = await authed(app, cookie)({
+    method: "POST",
+    url: "/api/clips",
+    payload: { content: "deploy commands", name: "  部署命令  " },
+  });
+  assert.equal(created.statusCode, 201);
+  assert.equal(created.json().clip.name, "部署命令");
+
+  const noName = (await createClip(app, cookie, "plain")).json().clip;
+  assert.equal(noName.name, null);
+  const blankName = (
+    await authed(app, cookie)({
+      method: "POST",
+      url: "/api/clips",
+      payload: { content: "blank name", name: "   " },
+    })
+  ).json().clip;
+  assert.equal(blankName.name, null);
+
+  // Dedup hit keeps the existing clip's name.
+  const dup = await authed(app, cookie)({
+    method: "POST",
+    url: "/api/clips",
+    payload: { content: "deploy commands", name: "别的名字" },
+  });
+  assert.equal(dup.json().deduplicated, true);
+  assert.equal(dup.json().clip.name, "部署命令");
+
+  // Rename only: updatedAt/activeAt untouched (activeAt reflects the dedup bump).
+  await tick();
+  const renamed = await authed(app, cookie)({
+    method: "PATCH",
+    url: `/api/clips/${created.json().clip.id}`,
+    payload: { name: "服务器命令" },
+  });
+  assert.equal(renamed.json().clip.name, "服务器命令");
+  assert.equal(renamed.json().clip.updatedAt, created.json().clip.updatedAt);
+  assert.equal(renamed.json().clip.activeAt, dup.json().clip.activeAt);
+
+  // Clearing the name with a blank string.
+  const cleared = await authed(app, cookie)({
+    method: "PATCH",
+    url: `/api/clips/${created.json().clip.id}`,
+    payload: { name: "  " },
+  });
+  assert.equal(cleared.json().clip.name, null);
+
+  const tooLong = await authed(app, cookie)({
+    method: "PATCH",
+    url: `/api/clips/${created.json().clip.id}`,
+    payload: { name: "x".repeat(65) },
+  });
+  assert.equal(tooLong.statusCode, 400);
+
+  // Search matches names too.
+  await authed(app, cookie)({
+    method: "PATCH",
+    url: `/api/clips/${created.json().clip.id}`,
+    payload: { name: "服务器命令" },
+  });
+  const byName = await authed(app, cookie)({ method: "GET", url: "/api/clips?q=服务器" });
+  assert.equal(byName.json().items.length, 1);
+  assert.equal(byName.json().items[0].id, created.json().clip.id);
+  await close();
+});
+
 test("delete & restore: deleted clip leaves the list, restore brings it back; 404s for bad states", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);

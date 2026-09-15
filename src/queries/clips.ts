@@ -38,7 +38,8 @@ export function useClipList(q: string) {
 
 export function useCreateClip() {
   return useMutation({
-    mutationFn: (content: string) => api.clips.create(content),
+    mutationFn: (vars: { content: string; name?: string | null }) =>
+      api.clips.create(vars.content, vars.name),
     // The default networkMode "online" would pause the request while offline,
     // but the PRD wants a visible failed card with a retry action instead.
     networkMode: "always",
@@ -48,8 +49,12 @@ export function useCreateClip() {
 export function useUpdateClip() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; content?: string; pinned?: boolean }) =>
-      api.clips.update(vars.id, { content: vars.content, pinned: vars.pinned }),
+    mutationFn: (vars: { id: string; content?: string; pinned?: boolean; name?: string | null }) =>
+      api.clips.update(vars.id, {
+        content: vars.content,
+        pinned: vars.pinned,
+        name: vars.name,
+      }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: clipsKeys.all }),
   });
 }

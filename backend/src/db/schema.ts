@@ -43,6 +43,8 @@ export const clips = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    // Optional user-chosen label; null when unset.
+    name: text("name"),
     content: text("content").notNull(),
     contentHash: text("content_hash").notNull(),
     pinnedAt: integer("pinned_at"),

@@ -10,6 +10,7 @@ import {
 } from "lucide-react";
 import { cn } from "cn";
 import { copyText } from "@/lib/clipboard";
+import { highlightText } from "@/lib/rich-text";
 import { strings } from "@/lib/strings";
 import { formatClipTime, formatFullTime } from "@/lib/time";
 import type { Clip } from "@/lib/types";
@@ -88,6 +89,11 @@ export function ClipCard({
       )}
     >
       <CardContent className="flex flex-col gap-2">
+        {clip.name ? (
+          <div className="text-sm leading-snug font-medium break-words">
+            {highlightText(clip.name, keyword)}
+          </div>
+        ) : null}
         <ClipContent
           content={clip.content}
           keyword={keyword}

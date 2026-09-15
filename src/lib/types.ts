@@ -9,6 +9,8 @@ export type User = {
 
 export type Clip = {
   id: string;
+  // Optional user-chosen label; null when unset.
+  name: string | null;
   content: string;
   pinnedAt: number | null;
   createdAt: number;

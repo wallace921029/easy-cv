@@ -59,6 +59,11 @@ function highlightKeyword(text: string, keyword: string | undefined, keyPrefix: 
   return nodes;
 }
 
+// Keyword highlight for single-line plain text (e.g. clip names).
+export function highlightText(text: string, keyword?: string): ReactNode[] {
+  return highlightKeyword(text, keyword, "h");
+}
+
 // Renders plain text with URLs turned into links and the search keyword
 // highlighted. Never uses dangerouslySetInnerHTML (XSS).
 export function renderRichText(text: string, keyword?: string): ReactNode[] {

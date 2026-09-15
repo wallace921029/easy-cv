@@ -30,7 +30,8 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { FieldError } from "@/components/ui/field";
+import { Field, FieldError, FieldLabel } from "@/components/ui/field";
+import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "@/components/ui/toast";
 
@@ -38,30 +39,43 @@ export function ClipEditor({
   open,
   onOpenChange,
   clip,
+  initialContent = "",
   onSubmitNew,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   // null = create mode; a clip = edit mode.
   clip: Clip | null;
-  onSubmitNew: (content: string) => void;
+  // Create-mode prefill from a paste: the pasted text is the dirty-baseline,
+  // so closing without edits does not ask for confirmation.
+  initialContent?: string;
+  onSubmitNew: (content: string, name: string | null) => void;
 }) {
   const isMobile = useIsMobile();
   const updateClip = useUpdateClip();
+  const [name, setName] = useState("");
   const [content, setContent] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [confirmClose, setConfirmClose] = useState(false);
+  const nameRef = useRef<HTMLInputElement>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
 
   useEffect(() => {
     if (open) {
-      setContent(clip?.content ?? "");
+      setName(clip?.name ?? "");
+      setContent(clip?.content ?? initialContent);
       setError(null);
+      // Paste-confirm: content is already there, so focus the name field.
+      const focusName = !clip && initialContent !== "";
+      requestAnimationFrame(() => {
+        (focusName ? nameRef.current : textareaRef.current)?.focus();
+      });
     }
-  }, [open, clip]);
+  }, [open, clip, initialContent]);
 
-  const original = clip?.content ?? "";
-  const dirty = content !== original;
+  const baseName = clip?.name ?? "";
+  const baseContent = clip ? clip.content : initialContent;
+  const dirty = name !== baseName || content !== baseContent;
   const canSave = /\S/.test(content) && (clip === null || dirty);
   const saving = updateClip.isPending;
 
@@ -81,9 +95,18 @@ export function ClipEditor({
     if (!canSave || saving) {
       return;
     }
+    const normalizedName = name.trim() === "" ? null : name.trim();
     if (clip) {
+      // Send only what changed: untouched content must not bump updatedAt.
+      const patch: { content?: string; name?: string | null } = {};
+      if (content !== baseContent) {
+        patch.content = content;
+      }
+      if (normalizedName !== (clip.name ?? null)) {
+        patch.name = normalizedName;
+      }
       try {
-        await updateClip.mutateAsync({ id: clip.id, content });
+        await updateClip.mutateAsync({ id: clip.id, ...patch });
         toast.add({ title: strings.common.saved, type: "success" });
         onOpenChange(false);
       } catch (err) {
@@ -92,7 +115,7 @@ export function ClipEditor({
       }
     } else {
       // Create mode: close immediately; the pending list shows the status.
-      onSubmitNew(content);
+      onSubmitNew(content, normalizedName);
       onOpenChange(false);
     }
   };
@@ -123,7 +146,30 @@ export function ClipEditor({
   };
 
   const body = (
-    <div className="flex flex-col gap-3">
+    <div
+      className="flex flex-col gap-3"
+      onKeyDown={(e) => {
+        if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
+          e.preventDefault();
+          void save();
+        }
+      }}
+    >
+      <Field>
+        <FieldLabel htmlFor="clip-name">{strings.clips.nameLabel}</FieldLabel>
+        <Input
+          id="clip-name"
+          ref={nameRef}
+          value={name}
+          onChange={(e) => {
+            setName(e.target.value);
+            setError(null);
+          }}
+          placeholder={strings.clips.namePlaceholder}
+          autoComplete="off"
+          maxLength={64}
+        />
+      </Field>
       <Textarea
         ref={textareaRef}
         value={content}
@@ -131,16 +177,9 @@ export function ClipEditor({
           setContent(e.target.value);
           setError(null);
         }}
-        onKeyDown={(e) => {
-          if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
-            e.preventDefault();
-            void save();
-          }
-        }}
         placeholder={strings.clips.editorPlaceholder}
         rows={6}
         className="max-h-[50vh] resize-none"
-        autoFocus
       />
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">

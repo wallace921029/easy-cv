@@ -31,9 +31,10 @@ export default function HomePage() {
   const [highlightId, setHighlightId] = useState<string | null>(null);
   const highlightTimer = useRef<number | undefined>(undefined);
   const [pending, setPending] = useState<PendingClip[]>([]);
-  const [editor, setEditor] = useState<{ open: boolean; clip: Clip | null }>({
+  const [editor, setEditor] = useState<{ open: boolean; clip: Clip | null; initialContent: string }>({
     open: false,
     clip: null,
+    initialContent: "",
   });
 
   const statusQuery = useSystemStatus();
@@ -69,7 +70,7 @@ export default function HomePage() {
   );
 
   const submitContent = useCallback(
-    async (content: string, tempId?: number) => {
+    async (content: string, name: string | null, tempId?: number) => {
       if (new TextEncoder().encode(content).length > maxTextBytes) {
         toast.add({
           title: strings.clips.textTooLarge(maxTextBytes / (1024 * 1024)),
@@ -80,7 +81,7 @@ export default function HomePage() {
         }
         return;
       }
-      const pendingItem = makePendingClip(content);
+      const pendingItem = makePendingClip(content, name);
       const id = tempId ?? pendingItem.tempId;
       setPending((prev) => {
         if (tempId !== undefined) {
@@ -89,7 +90,7 @@ export default function HomePage() {
         return [pendingItem, ...prev];
       });
       try {
-        const res = await createClip.mutateAsync(content);
+        const res = await createClip.mutateAsync({ content, name });
         setPending((prev) => prev.filter((p) => p.tempId !== id));
         if (res.deduplicated) {
           await queryClient.invalidateQueries({ queryKey: clipsKeys.all });
@@ -121,14 +122,18 @@ export default function HomePage() {
     [maxTextBytes, createClip.mutateAsync, deleteClip.mutate, queryClient, flashHighlight],
   );
 
-  usePasteToCreate(submitContent);
+  const openEditorWithPaste = useCallback(
+    (text: string) => setEditor({ open: true, clip: null, initialContent: text }),
+    [],
+  );
+  usePasteToCreate(openEditorWithPaste);
 
   return (
     <div className="min-h-screen">
       <AppHeader
         searchValue={searchInput}
         onSearchChange={setSearchInput}
-        onNewClip={() => setEditor({ open: true, clip: null })}
+        onNewClip={() => setEditor({ open: true, clip: null, initialContent: "" })}
       />
       <main className="mx-auto max-w-3xl px-4 pt-4 pb-24 md:pb-10">
         <ClipList
@@ -139,21 +144,22 @@ export default function HomePage() {
           pinnedLoading={pinnedQuery.isPending}
           listQuery={listQuery}
           pending={pending}
-          onRetryPending={(item) => void submitContent(item.content, item.tempId)}
+          onRetryPending={(item) => void submitContent(item.content, item.name, item.tempId)}
           onRemovePending={(tempId) =>
             setPending((prev) => prev.filter((p) => p.tempId !== tempId))
           }
           highlightId={highlightId}
-          onEdit={(clip) => setEditor({ open: true, clip })}
+          onEdit={(clip) => setEditor({ open: true, clip, initialContent: "" })}
           onDelete={handleDelete}
         />
       </main>
-      <NewClipFab onClick={() => setEditor({ open: true, clip: null })} />
+      <NewClipFab onClick={() => setEditor({ open: true, clip: null, initialContent: "" })} />
       <ClipEditor
         open={editor.open}
         onOpenChange={(open) => setEditor((prev) => ({ ...prev, open }))}
         clip={editor.clip}
-        onSubmitNew={(content) => void submitContent(content)}
+        initialContent={editor.initialContent}
+        onSubmitNew={(content, name) => void submitContent(content, name)}
       />
     </div>
   );

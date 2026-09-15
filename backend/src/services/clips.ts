@@ -7,6 +7,7 @@ import { AppError } from "../lib/errors.js";
 
 export type ApiClip = {
   id: string;
+  name: string | null;
   content: string;
   pinnedAt: number | null;
   createdAt: number;
@@ -19,6 +20,7 @@ export type ApiClip = {
 export function toApiClip(row: ClipRow): ApiClip {
   return {
     id: row.id,
+    name: row.name,
     content: row.content,
     pinnedAt: row.pinnedAt,
     createdAt: row.createdAt,
@@ -36,10 +38,24 @@ export function assertValidContent(content: string, maxTextBytes: number): void 
   }
 }
 
+// Names are trimmed; a blank name means "no name". Renaming never counts as a
+// content edit, so it must not touch updated_at.
+export function normalizeClipName(name: string | null | undefined): string | null | undefined {
+  if (name === undefined) {
+    return undefined;
+  }
+  if (name === null) {
+    return null;
+  }
+  const trimmed = name.trim();
+  return trimmed === "" ? null : trimmed;
+}
+
 export function createClip(
   db: DbOrTx,
   userId: string,
   content: string,
+  name: string | null,
   maxTextBytes: number,
 ): { clip: ClipRow; deduplicated: boolean } {
   assertValidContent(content, maxTextBytes);
@@ -57,7 +73,8 @@ export function createClip(
     .get();
   const now = Date.now();
   if (existing) {
-    // Duplicating a pinned clip leaves it (and its position) untouched.
+    // A dedup hit never renames the existing clip: the name submitted with the
+    // duplicate paste is intentionally dropped.
     if (existing.pinnedAt === null) {
       db.update(clips).set({ activeAt: now }).where(eq(clips.id, existing.id)).run();
       return { clip: { ...existing, activeAt: now }, deduplicated: true };
@@ -67,6 +84,7 @@ export function createClip(
   const row: ClipRow = {
     id: nanoid(),
     userId,
+    name,
     content,
     contentHash,
     pinnedAt: null,
@@ -127,8 +145,9 @@ export function listClips(
     // The default list only holds unpinned clips; searching covers both groups.
     conditions.push(isNull(clips.pinnedAt));
   } else {
+    const pattern = `%${escapeLike(params.q)}%`;
     conditions.push(
-      sql`${clips.content} LIKE '%' || ${escapeLike(params.q)} || '%' ESCAPE '\\'`,
+      sql`(${clips.content} LIKE ${pattern} ESCAPE '\\' OR ${clips.name} LIKE ${pattern} ESCAPE '\\')`,
     );
   }
   if (params.cursor) {
@@ -170,13 +189,13 @@ export function updateClip(
   db: DbOrTx,
   userId: string,
   id: string,
-  patch: { content?: string; pinned?: boolean },
+  patch: { content?: string; pinned?: boolean; name?: string | null },
   maxTextBytes: number,
 ): ClipRow {
   const row = getClip(db, userId, id);
   const now = Date.now();
   const set: Partial<
-    Pick<ClipRow, "content" | "contentHash" | "pinnedAt" | "updatedAt" | "activeAt">
+    Pick<ClipRow, "content" | "contentHash" | "pinnedAt" | "updatedAt" | "activeAt" | "name">
   > = {};
   if (patch.content !== undefined) {
     assertValidContent(patch.content, maxTextBytes);
@@ -184,6 +203,9 @@ export function updateClip(
     set.contentHash = sha256(patch.content);
     // activeAt intentionally untouched: editing must not reorder the list.
     set.updatedAt = now;
+  }
+  if (patch.name !== undefined) {
+    set.name = normalizeClipName(patch.name) ?? null;
   }
   if (patch.pinned === true && row.pinnedAt === null) {
     set.pinnedAt = now;
