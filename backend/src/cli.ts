@@ -5,7 +5,7 @@ import { hashPassword } from "./lib/password.js";
 import { deleteUserSessions } from "./services/sessions.js";
 import { findByUsername, updatePassword } from "./services/users.js";
 
-const USAGE = "用法：node backend/dist/cli.js reset-password <username>";
+const USAGE = "用法：node backend/dist/cli.js reset-password <email>";
 
 const PASSWORD_ALPHABET = "ABCDEFGHJKMNPQRSTUVWXYZabcdefghjkmnpqrstuvwxyz23456789";
 

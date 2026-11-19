@@ -1,0 +1,33 @@
+import assert from "node:assert/strict";
+import { test } from "node:test";
+import { authed, createTestApp, enableRegistration, registerUser, sessionCookie, setupAdmin } from "./helpers.js";
+
+test("groups isolate clips, support moving and return clips to root on deletion", async () => {
+  const { app, db, close } = await createTestApp();
+  const a = authed(app, sessionCookie(await setupAdmin(app)));
+  enableRegistration(db);
+  const b = authed(app, sessionCookie(await registerUser(app, "bob@example.com", "bob-password", "TESTCODE8")));
+  const created = await a({ method: "POST", url: "/api/groups", payload: { name: " Work " } });
+  assert.equal(created.statusCode, 201);
+  const groupId = created.json().group.id as string;
+  assert.equal(created.json().group.name, "Work");
+  assert.deepEqual((await b({ method: "GET", url: "/api/groups" })).json().items, []);
+  assert.equal((await b({ method: "POST", url: "/api/clips", payload: { content: "other", groupId } })).statusCode, 404);
+  assert.equal((await b({ method: "DELETE", url: `/api/groups/${groupId}` })).statusCode, 404);
+  const root = await a({ method: "POST", url: "/api/clips", payload: { content: "same" } });
+  const grouped = await a({ method: "POST", url: "/api/clips", payload: { content: "same", groupId } });
+  assert.equal(grouped.statusCode, 201);
+  assert.notEqual(root.json().clip.id, grouped.json().clip.id);
+  assert.equal((await a({ method: "GET", url: "/api/clips" })).json().items.length, 1);
+  assert.equal((await a({ method: "GET", url: `/api/clips?groupId=${groupId}` })).json().items.length, 1);
+  await a({ method: "PATCH", url: `/api/clips/${root.json().clip.id}`, payload: { groupId } });
+  assert.equal((await a({ method: "GET", url: `/api/clips?groupId=${groupId}` })).json().items.length, 2);
+  await a({ method: "PATCH", url: `/api/clips/${root.json().clip.id}`, payload: { pinned: true } });
+  assert.equal((await a({ method: "GET", url: `/api/clips?pinned=true&groupId=${groupId}` })).json().items.length, 1);
+  assert.equal((await a({ method: "GET", url: "/api/clips?pinned=true" })).json().items.length, 0);
+  assert.equal((await a({ method: "PATCH", url: `/api/groups/${groupId}`, payload: { name: "Renamed" } })).json().group.name, "Renamed");
+  assert.equal((await a({ method: "DELETE", url: `/api/groups/${groupId}` })).statusCode, 204);
+  assert.equal((await a({ method: "GET", url: "/api/clips?pinned=true" })).json().items.length, 1);
+  assert.equal((await a({ method: "GET", url: "/api/clips" })).json().items.length, 1);
+  await close();
+});

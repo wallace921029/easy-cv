@@ -7,7 +7,10 @@ export type User = {
   role: Role;
 };
 
+export type Group = { id: string; name: string };
+
 export type Clip = {
+  groupId: string | null;
   id: string;
   // Optional user-chosen label; null when unset.
   name: string | null;

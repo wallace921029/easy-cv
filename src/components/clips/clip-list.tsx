@@ -28,6 +28,9 @@ export function ClipList({
   highlightId,
   onEdit,
   onDelete,
+  onSelect,
+  selectedId,
+  onDragClip,
 }: {
   q: string;
   searching: boolean;
@@ -41,6 +44,9 @@ export function ClipList({
   highlightId: string | null;
   onEdit: (clip: Clip) => void;
   onDelete: (clip: Clip) => void;
+  onSelect: (clip: Clip) => void;
+  selectedId: string | null;
+  onDragClip: (clip: Clip | null) => void;
 }) {
   const isMobile = useIsMobile();
   const sentinelRef = useRef<HTMLDivElement>(null);
@@ -62,7 +68,7 @@ export function ClipList({
 
   if (listQuery.isPending || (!searching && pinnedLoading)) {
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         {[0, 1, 2].map((i) => (
           <Card key={i}>
             <CardContent className="flex flex-col gap-2">
@@ -88,7 +94,7 @@ export function ClipList({
   }
 
   const items = listQuery.data.pages.flatMap((page) => page.items);
-  const cardProps = { now, onEdit, onDelete };
+  const cardProps = { now, onEdit, onDelete, onSelect, onDragClip };
 
   if (searching) {
     if (items.length === 0) {
@@ -101,11 +107,12 @@ export function ClipList({
       );
     }
     return (
-      <div className="flex flex-col gap-3">
+      <div className="flex flex-col gap-1">
         {items.map((clip) => (
           <ClipCard
             key={clip.id}
             clip={clip}
+            selected={clip.id === selectedId}
             keyword={q}
             highlighted={clip.id === highlightId}
             {...cardProps}
@@ -148,11 +155,12 @@ export function ClipList({
       {pinned.length > 0 ? (
         <section className="flex flex-col gap-2">
           <h2 className="text-xs font-medium text-muted-foreground">{strings.clips.pinnedGroup}</h2>
-          <div className="flex flex-col gap-3">
+          <div className="flex flex-col gap-1">
             {pinned.map((clip) => (
               <ClipCard
                 key={clip.id}
                 clip={clip}
+            selected={clip.id === selectedId}
                 highlighted={clip.id === highlightId}
                 {...cardProps}
               />
@@ -165,11 +173,12 @@ export function ClipList({
           <h2 className="text-xs font-medium text-muted-foreground">{strings.clips.recentGroup}</h2>
         ) : null}
         <PendingClips items={pending} onRetry={onRetryPending} onRemove={onRemovePending} />
-        <div className="flex flex-col gap-3">
+        <div className="flex flex-col gap-1">
           {items.map((clip) => (
             <ClipCard
               key={clip.id}
               clip={clip}
+            selected={clip.id === selectedId}
               highlighted={clip.id === highlightId}
               {...cardProps}
             />

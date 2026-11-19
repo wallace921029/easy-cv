@@ -29,11 +29,11 @@ cp .env.example .env            # 修改 ADMIN_INVITE_CODE（至少 8 位）
 开两个终端：
 
 ```bash
-npm run dev:backend   # 后端 http://127.0.0.1:8000
-npm run dev           # 前端 http://localhost:5173（/api 已代理到后端）
+npm run dev:backend   # 后端 http://127.0.0.1:10002
+npm run dev           # 前端 http://localhost:10001（/api 已代理到后端）
 ```
 
-打开 http://localhost:5173 会跳转到 `/setup`，用 `.env` 里的 `ADMIN_INVITE_CODE` 完成初始化。
+打开 http://localhost:10001 会跳转到 `/setup`，用 `.env` 里的 `ADMIN_INVITE_CODE` 完成初始化。
 
 ## 测试与检查
 
@@ -91,7 +91,7 @@ git pull && docker compose up -d --build
 docker compose stop && cp -r data data.bak && docker compose start
 
 # 重置任意用户（含管理员）的密码，终端会打印一个新随机密码
-docker compose exec app node backend/dist/cli.js reset-password <username>
+docker compose exec app node backend/dist/cli.js reset-password <email>
 ```
 
 ## 常见问题
@@ -100,7 +100,7 @@ docker compose exec app node backend/dist/cli.js reset-password <username>
 浏览器只在 HTTPS（安全上下文）下开放 `navigator.clipboard` 读取接口。HTTP 下该按钮自动隐藏；粘贴创建和点击复制不受影响（复制自动使用降级方案）。
 
 **忘记管理员密码怎么办？**
-在服务器上执行 `docker compose exec app node backend/dist/cli.js reset-password admin`，用打印出的新密码登录。
+在服务器上执行 `docker compose exec app node backend/dist/cli.js reset-password admin@example.com`，用打印出的新密码登录。
 
 **启动报「数据目录不可写」？**
 容器内以 `node`（uid 1000）用户运行，`./data` 属主不对时会出现。执行 `sudo chown -R 1000:1000 ./data` 后重启。不要把 `data/` 放在 NFS 等网络文件系统上（SQLite 文件锁不可靠）。

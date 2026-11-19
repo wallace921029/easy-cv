@@ -8,7 +8,7 @@ const repoRoot = path.resolve(backendDir, "..");
 
 const envSchema = z.object({
   ADMIN_INVITE_CODE: z.string().optional(),
-  PORT: z.coerce.number().int().positive().default(8000),
+  PORT: z.coerce.number().int().positive().optional(),
   MAX_TEXT_SIZE_KB: z.coerce.number().int().min(1).default(1024),
   SESSION_TTL_DAYS: z.coerce.number().int().min(1).default(30),
   TRUST_PROXY: z
@@ -45,7 +45,7 @@ export function createConfig(env: NodeJS.ProcessEnv): Config {
   const dataDir = path.join(repoRoot, "data");
   return {
     adminInviteCode: data.ADMIN_INVITE_CODE,
-    port: data.PORT,
+    port: data.PORT ?? (data.NODE_ENV === "production" ? 8000 : 10002),
     maxTextSizeKb: data.MAX_TEXT_SIZE_KB,
     maxTextBytes: data.MAX_TEXT_SIZE_KB * 1024,
     sessionTtlDays: data.SESSION_TTL_DAYS,

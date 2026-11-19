@@ -36,6 +36,13 @@ export const settings = sqliteTable("settings", {
   value: text("value").notNull(),
 });
 
+export const groups = sqliteTable("groups", {
+  id: text("id").primaryKey(),
+  userId: text("user_id").notNull().references(() => users.id, { onDelete: "cascade" }),
+  name: text("name").notNull(),
+  createdAt: integer("created_at").notNull(),
+}, (t) => [index("groups_user_id_idx").on(t.userId)]);
+
 export const clips = sqliteTable(
   "clips",
   {
@@ -43,6 +50,7 @@ export const clips = sqliteTable(
     userId: text("user_id")
       .notNull()
       .references(() => users.id, { onDelete: "cascade" }),
+    groupId: text("group_id").references(() => groups.id, { onDelete: "set null" }),
     // Optional user-chosen label; null when unset.
     name: text("name"),
     content: text("content").notNull(),

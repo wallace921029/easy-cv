@@ -1,13 +1,14 @@
 import { and, desc, eq, isNotNull, isNull, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import type { DbOrTx } from "../db/client.js";
-import { clips, type ClipRow } from "../db/schema.js";
+import { clips, groups, type ClipRow } from "../db/schema.js";
 import { sha256 } from "../lib/crypto.js";
 import { AppError } from "../lib/errors.js";
 
 export type ApiClip = {
   id: string;
   name: string | null;
+  groupId: string | null;
   content: string;
   pinnedAt: number | null;
   createdAt: number;
@@ -21,6 +22,7 @@ export function toApiClip(row: ClipRow): ApiClip {
   return {
     id: row.id,
     name: row.name,
+    groupId: row.groupId,
     content: row.content,
     pinnedAt: row.pinnedAt,
     createdAt: row.createdAt,
@@ -57,7 +59,9 @@ export function createClip(
   content: string,
   name: string | null,
   maxTextBytes: number,
+  groupId: string | null = null,
 ): { clip: ClipRow; deduplicated: boolean } {
+  assertGroup(db, userId, groupId);
   assertValidContent(content, maxTextBytes);
   const contentHash = sha256(content);
   const existing = db
@@ -67,6 +71,7 @@ export function createClip(
       and(
         eq(clips.userId, userId),
         eq(clips.contentHash, contentHash),
+        groupId === null ? isNull(clips.groupId) : eq(clips.groupId, groupId),
         isNull(clips.deletedAt),
       ),
     )
@@ -84,6 +89,7 @@ export function createClip(
   const row: ClipRow = {
     id: nanoid(),
     userId,
+    groupId,
     name,
     content,
     contentHash,
@@ -97,11 +103,11 @@ export function createClip(
   return { clip: row, deduplicated: false };
 }
 
-export function listPinnedClips(db: DbOrTx, userId: string): ClipRow[] {
+export function listPinnedClips(db: DbOrTx, userId: string, groupId: string | null): ClipRow[] {
   return db
     .select()
     .from(clips)
-    .where(and(eq(clips.userId, userId), isNull(clips.deletedAt), isNotNull(clips.pinnedAt)))
+    .where(and(eq(clips.userId, userId), groupId === null ? isNull(clips.groupId) : eq(clips.groupId, groupId), isNull(clips.deletedAt), isNotNull(clips.pinnedAt)))
     .orderBy(desc(clips.pinnedAt))
     .all();
 }
@@ -135,12 +141,13 @@ export function listClips(
   db: DbOrTx,
   params: {
     userId: string;
+    groupId: string | null;
     q: string | null;
     cursor: { activeAt: number; id: string } | null;
     limit: number;
   },
 ): { items: ClipRow[]; nextCursor: string | null } {
-  const conditions = [eq(clips.userId, params.userId), isNull(clips.deletedAt)];
+  const conditions = [eq(clips.userId, params.userId), isNull(clips.deletedAt), params.groupId === null ? isNull(clips.groupId) : eq(clips.groupId, params.groupId)];
   if (params.q === null) {
     // The default list only holds unpinned clips; searching covers both groups.
     conditions.push(isNull(clips.pinnedAt));
@@ -185,18 +192,28 @@ export function getClip(db: DbOrTx, userId: string, id: string): ClipRow {
   return row;
 }
 
+function assertGroup(db: DbOrTx, userId: string, groupId: string | null): void {
+  if (groupId !== null && !db.select({ id: groups.id }).from(groups).where(and(eq(groups.id, groupId), eq(groups.userId, userId))).get()) {
+    throw new AppError(404, "NOT_FOUND", "分组不存在");
+  }
+}
+
 export function updateClip(
   db: DbOrTx,
   userId: string,
   id: string,
-  patch: { content?: string; pinned?: boolean; name?: string | null },
+  patch: { content?: string; pinned?: boolean; name?: string | null; groupId?: string | null },
   maxTextBytes: number,
 ): ClipRow {
   const row = getClip(db, userId, id);
   const now = Date.now();
   const set: Partial<
-    Pick<ClipRow, "content" | "contentHash" | "pinnedAt" | "updatedAt" | "activeAt" | "name">
+    Pick<ClipRow, "content" | "contentHash" | "pinnedAt" | "updatedAt" | "activeAt" | "name" | "groupId">
   > = {};
+  if (patch.groupId !== undefined) {
+    assertGroup(db, userId, patch.groupId);
+    set.groupId = patch.groupId;
+  }
   if (patch.content !== undefined) {
     assertValidContent(patch.content, maxTextBytes);
     set.content = patch.content;

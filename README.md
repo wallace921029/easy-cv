@@ -29,11 +29,11 @@ cp .env.example .env            # Configure ADMIN_INVITE_CODE (at least 8 charac
 Run in two separate terminals:
 
 ```bash
-npm run dev:backend   # Backend at http://127.0.0.1:8000
-npm run dev           # Frontend at http://localhost:5173 (/api is proxied to backend)
+npm run dev:backend   # Backend at http://127.0.0.1:10002
+npm run dev           # Frontend at http://localhost:10001 (/api is proxied to backend)
 ```
 
-Open http://localhost:5173 in your browser. It will redirect to `/setup`. Use the `ADMIN_INVITE_CODE` defined in `.env` to complete initialization.
+Open http://localhost:10001 in your browser. It will redirect to `/setup`. Use the `ADMIN_INVITE_CODE` defined in `.env` to complete initialization.
 
 ## Testing & Quality Checks
 
@@ -91,7 +91,7 @@ git pull && docker compose up -d --build
 docker compose stop && cp -r data data.bak && docker compose start
 
 # Reset password for any user (including admin); prints a new random password
-docker compose exec app node backend/dist/cli.js reset-password <username>
+docker compose exec app node backend/dist/cli.js reset-password <email>
 ```
 
 ## FAQ
@@ -100,7 +100,7 @@ docker compose exec app node backend/dist/cli.js reset-password <username>
 Browsers only expose the `navigator.clipboard.readText` API in secure contexts (HTTPS). Under plain HTTP, this button is automatically hidden. Paste-to-create (`Cmd/Ctrl + V`) and click-to-copy remain unaffected (copying uses an automatic fallback mechanism).
 
 **What should I do if I forget the admin password?**  
-Run `docker compose exec app node backend/dist/cli.js reset-password admin` on your server and log in with the newly printed password.
+Run `docker compose exec app node backend/dist/cli.js reset-password admin@example.com` on your server and log in with the newly printed password.
 
 **"Data directory not writable" error on container startup?**  
 The container runs under the `node` user (UID 1000). If `./data` permissions are incorrect, run `sudo chown -R 1000:1000 ./data` and restart. Avoid placing `data/` on network file systems such as NFS (SQLite file locking may be unreliable).

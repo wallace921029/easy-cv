@@ -15,6 +15,13 @@
       "when": 1789442294065,
       "tag": "0001_confused_blacklash",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1795068048464,
+      "tag": "0002_spotty_magus",
+      "breakpoints": true
     }
   ]
 }

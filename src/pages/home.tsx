@@ -11,11 +11,15 @@ import {
   useDeleteClip,
   usePinnedClips,
   useRestoreClip,
+  useUpdateClip,
 } from "@/queries/clips";
 import { useSystemStatus } from "@/queries/system";
 import { useDebouncedValue } from "@/hooks/use-debounced-value";
 import { useNow } from "@/hooks/use-now";
+import { Sheet, SheetContent } from "@/components/ui/sheet";
+import { ClipDetail } from "@/components/clips/clip-detail";
 import { usePasteToCreate } from "@/hooks/use-paste-to-create";
+import { GroupsSidebar } from "@/components/clips/groups-sidebar";
 import { AppHeader } from "@/components/app/app-header";
 import { ClipEditor } from "@/components/clips/clip-editor";
 import { ClipList } from "@/components/clips/clip-list";
@@ -26,7 +30,10 @@ import { makePendingClip, type PendingClip } from "@/components/clips/pending-cl
 
 export default function HomePage() {
   const now = useNow();
+  const [draggingClip, setDraggingClip] = useState<Clip | null>(null);
+  const [selection, setSelection] = useState<Clip | null>(null);
   const queryClient = useQueryClient();
+  const [groupId, setGroupId] = useState<string | null>(null);
   const [searchInput, setSearchInput] = useState("");
   const q = useDebouncedValue(searchInput.trim(), 300);
   const searching = q.length > 0;
@@ -41,11 +48,13 @@ export default function HomePage() {
 
   const statusQuery = useSystemStatus();
   const maxTextBytes = statusQuery.data?.maxTextBytes ?? Number.MAX_SAFE_INTEGER;
-  const pinnedQuery = usePinnedClips(!searching);
-  const listQuery = useClipList(q);
+  const pinnedQuery = usePinnedClips(!searching, groupId);
+  const listQuery = useClipList(q, groupId);
   const createClip = useCreateClip();
   const deleteClip = useDeleteClip();
   const restoreClip = useRestoreClip();
+  const moveClip = useUpdateClip();
+  const selectedClip = selection ? ([...(pinnedQuery.data ?? []), ...(listQuery.data?.pages.flatMap((page) => page.items) ?? [])].find((clip) => clip.id === selection.id) ?? selection) : null;
 
   const flashHighlight = useCallback((id: string) => {
     setHighlightId(id);
@@ -57,6 +66,7 @@ export default function HomePage() {
   // and TanStack drops mutate() callbacks of unmounted observers.
   const handleDelete = useCallback(
     (clip: Clip) => {
+      setSelection((current) => current?.id === clip.id ? null : current);
       toast.add({
         title: strings.common.deleted,
         timeout: 5000,
@@ -72,7 +82,7 @@ export default function HomePage() {
   );
 
   const submitContent = useCallback(
-    async (content: string, name: string | null, tempId?: number) => {
+    async (content: string, name: string | null, tempId?: number, targetGroupId: string | null = groupId) => {
       if (new TextEncoder().encode(content).length > maxTextBytes) {
         toast.add({
           title: strings.clips.textTooLarge(maxTextBytes / (1024 * 1024)),
@@ -83,7 +93,7 @@ export default function HomePage() {
         }
         return;
       }
-      const pendingItem = makePendingClip(content, name);
+      const pendingItem = makePendingClip(content, name, targetGroupId);
       const id = tempId ?? pendingItem.tempId;
       setPending((prev) => {
         if (tempId !== undefined) {
@@ -92,7 +102,7 @@ export default function HomePage() {
         return [pendingItem, ...prev];
       });
       try {
-        const res = await createClip.mutateAsync({ content, name });
+        const res = await createClip.mutateAsync({ content, name, groupId: targetGroupId });
         setPending((prev) => prev.filter((p) => p.tempId !== id));
         if (res.deduplicated) {
           await queryClient.invalidateQueries({ queryKey: clipsKeys.all });
@@ -121,7 +131,7 @@ export default function HomePage() {
         );
       }
     },
-    [maxTextBytes, createClip.mutateAsync, deleteClip.mutate, queryClient, flashHighlight],
+    [maxTextBytes, createClip.mutateAsync, deleteClip.mutate, queryClient, flashHighlight, groupId],
   );
 
   const openEditorWithPaste = useCallback(
@@ -133,7 +143,18 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       <AppHeader />
-      <main className="mx-auto max-w-3xl px-4 pt-4 sm:pt-6 pb-24 md:pb-10">
+      <main className="mx-auto max-w-6xl px-4 pt-4 sm:pt-6 pb-24 md:pb-10 flex flex-col md:flex-row gap-5">
+        <GroupsSidebar selected={groupId} onSelect={(id) => { setGroupId(id); setSelection(null); }}
+          draggingClip={draggingClip}
+          onDropClip={(targetGroupId) => {
+            if (!draggingClip || draggingClip.groupId === targetGroupId) return;
+            moveClip.mutate({ id: draggingClip.id, groupId: targetGroupId }, {
+              onSuccess: () => toast.add({ title: strings.groups.moved, type: "success" }),
+              onError: (err) => toast.add({ title: errorMessage(err), type: "error" }),
+            });
+            setDraggingClip(null);
+          }} />
+        <div className="min-w-0 flex-1 max-w-3xl">
         <div className="mb-4 sm:mb-6 flex items-center gap-2 sm:gap-3">
           <div className="min-w-0 flex-1">
             <SearchBox value={searchInput} onChange={setSearchInput} />
@@ -149,16 +170,25 @@ export default function HomePage() {
           pinnedItems={pinnedQuery.data}
           pinnedLoading={pinnedQuery.isPending}
           listQuery={listQuery}
-          pending={pending}
-          onRetryPending={(item) => void submitContent(item.content, item.name, item.tempId)}
+          pending={pending.filter((item) => item.groupId === groupId)}
+          onRetryPending={(item) => void submitContent(item.content, item.name, item.tempId, item.groupId)}
           onRemovePending={(tempId) =>
             setPending((prev) => prev.filter((p) => p.tempId !== tempId))
           }
           highlightId={highlightId}
           onEdit={(clip) => setEditor({ open: true, clip, initialContent: "" })}
+          onSelect={setSelection}
+          onDragClip={setDraggingClip}
+          selectedId={selectedClip?.id ?? null}
           onDelete={handleDelete}
         />
+        </div>
       </main>
+      <Sheet open={selectedClip !== null} onOpenChange={(open) => { if (!open) setSelection(null); }}>
+        <SheetContent side="right" className="data-[side=right]:w-[90vw] sm:data-[side=right]:w-[75vw] sm:data-[side=right]:max-w-3xl">
+          {selectedClip ? <ClipDetail clip={selectedClip} /> : null}
+        </SheetContent>
+      </Sheet>
       <NewClipFab onClick={() => setEditor({ open: true, clip: null, initialContent: "" })} />
       <ClipEditor
         open={editor.open}
@@ -166,6 +196,7 @@ export default function HomePage() {
         clip={editor.clip}
         initialContent={editor.initialContent}
         onSubmitNew={(content, name) => void submitContent(content, name)}
+        onSaved={(clip) => setSelection((current) => current?.id === clip.id ? clip : current)}
       />
     </div>
   );

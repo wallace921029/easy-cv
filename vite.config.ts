@@ -12,10 +12,12 @@ export default defineConfig({
     },
   },
   server: {
+    port: 10001,
+    strictPort: true,
     proxy: {
       // changeOrigin must stay off so the backend's Origin/Host consistency
       // check sees the browser's original Host header.
-      "/api": { target: "http://127.0.0.1:8000", changeOrigin: false },
+      "/api": { target: "http://127.0.0.1:10002", changeOrigin: false },
     },
   },
 });

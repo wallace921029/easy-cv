@@ -56,7 +56,7 @@ export function sessionCookie(res: LightMyRequestResponse): string {
 export async function setupAdmin(
   app: FastifyInstance,
   initCode: string = TEST_INIT_CODE,
-  username = "admin",
+  username = "admin@example.com",
   password = "admin-password",
 ): Promise<LightMyRequestResponse> {
   return app.inject({

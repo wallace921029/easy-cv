@@ -5,7 +5,7 @@ import { normalizeCode } from "../lib/codes.js";
 import { safeEqual } from "../lib/crypto.js";
 import { AppError } from "../lib/errors.js";
 import { DUMMY_HASH, hashPassword, verifyPassword } from "../lib/password.js";
-import { passwordSchema, usernameSchema } from "../lib/validation.js";
+import { emailSchema, passwordSchema } from "../lib/validation.js";
 import { requireUser, type AuthUser } from "../plugins/auth.js";
 import { getRegistrationSettings } from "../services/settings.js";
 import {
@@ -26,17 +26,17 @@ const userSchema = z.object({
 const userResultSchema = z.object({ user: userSchema });
 
 const setupBodySchema = z.object({
-  username: usernameSchema,
+  username: emailSchema,
   password: passwordSchema,
   initCode: z.string().min(1),
 });
 const registerBodySchema = z.object({
-  username: usernameSchema,
+  username: emailSchema,
   password: passwordSchema,
   inviteCode: z.string().min(1),
 });
 const loginBodySchema = z.object({
-  username: usernameSchema,
+  username: emailSchema,
   password: z.string().min(1),
 });
 const passwordChangeSchema = z.object({
@@ -81,7 +81,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       const { username, password, initCode } = request.body;
       const expected = normalizeCode(config.adminInviteCode ?? "");
       if (expected === "" || !safeEqual(normalizeCode(initCode), expected)) {
-        throw new AppError(403, "INIT_CODE_INVALID", "初始化码错误");
+        throw new AppError(403, "INIT_CODE_INVALID", "邀请码错误");
       }
       // Hash outside the transaction: argon2 is async, the better-sqlite3
       // transaction is sync. The emptiness check runs again inside so only the
@@ -124,7 +124,7 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
         user = usersService.createUser(db, { username, passwordHash, role: "user" });
       } catch (err) {
         if (usersService.isUniqueViolation(err)) {
-          throw new AppError(409, "USERNAME_TAKEN", "用户名已存在");
+          throw new AppError(409, "USERNAME_TAKEN", "邮箱已存在");
         }
         throw err;
       }
@@ -146,10 +146,10 @@ export async function authRoutes(app: FastifyInstance): Promise<void> {
       if (!user) {
         // Equalize timing with the "password wrong" path.
         await verifyPassword(DUMMY_HASH, password);
-        throw new AppError(401, "INVALID_CREDENTIALS", "用户名或密码错误");
+        throw new AppError(401, "INVALID_CREDENTIALS", "邮箱或密码错误");
       }
       if (!(await verifyPassword(user.passwordHash, password))) {
-        throw new AppError(401, "INVALID_CREDENTIALS", "用户名或密码错误");
+        throw new AppError(401, "INVALID_CREDENTIALS", "邮箱或密码错误");
       }
       // Revealed only after the password checks out.
       if (user.status !== "active") {

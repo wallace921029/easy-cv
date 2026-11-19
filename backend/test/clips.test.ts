@@ -22,7 +22,7 @@ async function makeUser(
   username: string,
 ): Promise<{ cookie: string; userId: string }> {
   enableRegistration(db);
-  const res = await registerUser(app, username, `${username}-password`, "TESTCODE8");
+  const res = await registerUser(app, username, `${username.split("@")[0]}-password`, "TESTCODE8");
   assert.equal(res.statusCode, 201);
   return { cookie: sessionCookie(res), userId: res.json().user.id as string };
 }
@@ -34,7 +34,7 @@ async function createClip(app: FastifyInstance, cookie: string, content: string)
 test("create: ok -> 201; empty/whitespace -> 400; surrounding spaces preserved; oversized -> 413", async () => {
   const { app, db, close } = await createTestApp({ env: { MAX_TEXT_SIZE_KB: "1" } });
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   const ok = await createClip(app, cookie, "  padded  ");
   assert.equal(ok.statusCode, 201);
@@ -58,7 +58,7 @@ test("create: ok -> 201; empty/whitespace -> 400; surrounding spaces preserved; 
 test("dedup: same content twice -> 200 same id, activeAt bumped; pinned stays put; deleted is recreated", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   const first = (await createClip(app, cookie, "dup")).json().clip;
   await tick();
@@ -87,7 +87,7 @@ test("dedup: same content twice -> 200 same id, activeAt bumped; pinned stays pu
 test("list: 35 clips paginate 30 + 5 without duplicates; pinned excluded; pinned list newest first", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   for (let i = 0; i < 35; i++) {
     await createClip(app, cookie, `clip-${String(i).padStart(2, "0")}`);
@@ -131,7 +131,7 @@ test("list: 35 clips paginate 30 + 5 without duplicates; pinned excluded; pinned
 test("search: case-insensitive, covers pinned, escapes % and _, handles Chinese", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   await createClip(app, cookie, "Hello World");
   await createClip(app, cookie, "hello 你好");
@@ -157,7 +157,7 @@ test("search: case-insensitive, covers pinned, escapes % and _, handles Chinese"
 test("edit: bumps updatedAt only, allows duplicate content; pin toggling keeps updatedAt, unpin moves to top", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   await createClip(app, cookie, "first");
   await tick();
@@ -206,7 +206,7 @@ test("edit: bumps updatedAt only, allows duplicate content; pin toggling keeps u
 test("name: create/patch/search semantics", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   const created = await authed(app, cookie)({
     method: "POST",
@@ -277,7 +277,7 @@ test("name: create/patch/search semantics", async () => {
 test("delete & restore: deleted clip leaves the list, restore brings it back; 404s for bad states", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   const clip = (await createClip(app, cookie, "temporary")).json().clip;
   const del = await authed(app, cookie)({ method: "DELETE", url: `/api/clips/${clip.id}` });
@@ -309,8 +309,8 @@ test("delete & restore: deleted clip leaves the list, restore brings it back; 40
 test("isolation: user B cannot read, modify, delete, restore or search user A's clips", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const a = await makeUser(app, db, "alice");
-  const b = await makeUser(app, db, "bob");
+  const a = await makeUser(app, db, "alice@example.com");
+  const b = await makeUser(app, db, "bob@example.com");
 
   const clip = (await createClip(app, a.cookie, "alice secret")).json().clip;
 
@@ -333,7 +333,7 @@ test("isolation: user B cannot read, modify, delete, restore or search user A's 
 test("cleanup: only soft-deleted clips older than 24h and expired sessions are removed", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   const kept = (await createClip(app, cookie, "kept")).json().clip;
   const doomed = (await createClip(app, cookie, "doomed")).json().clip;

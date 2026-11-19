@@ -9,6 +9,7 @@ import { toApiClip } from "../services/clips.js";
 const clipSchema = z.object({
   id: z.string(),
   name: z.string().nullable(),
+  groupId: z.string().nullable(),
   content: z.string(),
   pinnedAt: z.number().int().nullable(),
   createdAt: z.number().int(),
@@ -17,6 +18,7 @@ const clipSchema = z.object({
 });
 
 const listQuerySchema = z.object({
+  groupId: z.string().min(1).optional(),
   cursor: z.string().optional(),
   q: z.string().optional(),
   pinned: z.enum(["true", "false"]).optional(),
@@ -30,17 +32,18 @@ const listResponseSchema = z.object({
 
 const nameSchema = z.string().max(64).nullable().optional();
 
-const createBodySchema = z.object({ content: z.string(), name: nameSchema });
+const createBodySchema = z.object({ content: z.string(), name: nameSchema, groupId: z.string().min(1).nullable().optional() });
 const createResultSchema = z.object({ clip: clipSchema, deduplicated: z.boolean() });
 
 const patchBodySchema = z
   .object({
+    groupId: z.string().min(1).nullable().optional(),
     content: z.string().optional(),
     pinned: z.boolean().optional(),
     name: nameSchema,
   })
   .refine(
-    (o) => o.content !== undefined || o.pinned !== undefined || o.name !== undefined,
+    (o) => o.groupId !== undefined || o.content !== undefined || o.pinned !== undefined || o.name !== undefined,
   );
 
 const idParamsSchema = z.object({ id: z.string().min(1) });
@@ -57,9 +60,9 @@ export async function clipsRoutes(app: FastifyInstance): Promise<void> {
     },
     async (request) => {
       const user = request.user as AuthUser;
-      const { cursor: cursorRaw, q: qRaw, pinned, limit } = request.query;
+      const { cursor: cursorRaw, q: qRaw, pinned, limit, groupId } = request.query;
       if (pinned === "true") {
-        const items = clipsService.listPinnedClips(app.db, user.id).map(toApiClip);
+        const items = clipsService.listPinnedClips(app.db, user.id, groupId ?? null).map(toApiClip);
         return { items };
       }
       const q = (qRaw ?? "").trim();
@@ -69,6 +72,7 @@ export async function clipsRoutes(app: FastifyInstance): Promise<void> {
       const cursor = cursorRaw ? clipsService.decodeCursor(cursorRaw) : null;
       const { items, nextCursor } = clipsService.listClips(app.db, {
         userId: user.id,
+        groupId: groupId ?? null,
         q: q === "" ? null : q,
         cursor,
         limit,
@@ -94,6 +98,7 @@ export async function clipsRoutes(app: FastifyInstance): Promise<void> {
         request.body.content,
         clipsService.normalizeClipName(request.body.name) ?? null,
         app.config.maxTextBytes,
+        request.body.groupId ?? null,
       );
       return reply
         .status(deduplicated ? 200 : 201)

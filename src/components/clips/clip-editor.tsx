@@ -41,6 +41,7 @@ export function ClipEditor({
   clip,
   initialContent = "",
   onSubmitNew,
+  onSaved,
 }: {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -50,6 +51,7 @@ export function ClipEditor({
   // so closing without edits does not ask for confirmation.
   initialContent?: string;
   onSubmitNew: (content: string, name: string | null) => void;
+  onSaved?: (clip: Clip) => void;
 }) {
   const isMobile = useIsMobile();
   const updateClip = useUpdateClip();
@@ -106,7 +108,8 @@ export function ClipEditor({
         patch.name = normalizedName;
       }
       try {
-        await updateClip.mutateAsync({ id: clip.id, ...patch });
+        const result = await updateClip.mutateAsync({ id: clip.id, ...patch });
+        onSaved?.(result.clip);
         toast.add({ title: strings.common.saved, type: "success" });
         onOpenChange(false);
       } catch (err) {
@@ -179,8 +182,8 @@ export function ClipEditor({
           setError(null);
         }}
         placeholder={strings.clips.editorPlaceholder}
-        rows={6}
-        className="max-h-[42vh] min-h-28 w-full min-w-0 resize-none overflow-y-auto break-all [overflow-wrap:anywhere]"
+        rows={clip ? 6 : 14}
+        className={`${clip ? "max-h-[42vh] min-h-28" : "h-[45vh] min-h-48 max-h-[50vh]"} w-full min-w-0 resize-none overflow-y-auto break-all [overflow-wrap:anywhere]`}
       />
       <div className="flex items-center justify-between shrink-0">
         <span className="text-xs text-muted-foreground">
@@ -223,7 +226,7 @@ export function ClipEditor({
         </Drawer>
       ) : (
         <Dialog open={open} onOpenChange={handleOpenChange}>
-          <DialogContent className="sm:max-w-lg">
+          <DialogContent className={clip ? "sm:max-w-lg" : "sm:max-w-3xl"}>
             <DialogHeader>
               <DialogTitle>{title}</DialogTitle>
               <DialogDescription className="sr-only">{title}</DialogDescription>

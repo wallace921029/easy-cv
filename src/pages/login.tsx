@@ -6,7 +6,7 @@ import { z } from "zod";
 import { api } from "@/lib/api";
 import { zodResolver } from "@/lib/form";
 import { errorMessage, strings } from "@/lib/strings";
-import { getUsernameSchema } from "@/lib/validation";
+import { getEmailSchema } from "@/lib/validation";
 import { sanitizeRedirect } from "@/components/app/route-guard";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { PasswordInput } from "@/components/app/password-input";
@@ -18,7 +18,7 @@ import { useSystemStatus } from "@/queries/system";
 
 const getFormSchema = () =>
   z.object({
-    username: getUsernameSchema(),
+    username: getEmailSchema(),
     password: z.string().min(1, strings.validation.passwordRequired),
   });
 
@@ -61,8 +61,8 @@ export default function LoginPage() {
             <FieldError>{strings.errors.sessionExpired}</FieldError>
           ) : null}
           <Field>
-            <FieldLabel htmlFor="username">{strings.auth.username}</FieldLabel>
-            <Input id="username" autoComplete="username" autoFocus {...register("username")} />
+            <FieldLabel htmlFor="username">{strings.auth.email}</FieldLabel>
+            <Input id="username" type="email" autoComplete="email" autoFocus {...register("username")} />
             <FieldError errors={[errors.username]} />
           </Field>
           <Field>

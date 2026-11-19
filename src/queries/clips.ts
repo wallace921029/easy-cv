@@ -13,24 +13,24 @@ import type { Clip, ClipListResponse } from "@/lib/types";
 
 export const clipsKeys = {
   all: ["clips"] as const,
-  pinned: ["clips", "pinned"] as const,
-  list: (q: string) => ["clips", "list", { q }] as const,
+  pinned: (groupId: string | null) => ["clips", "pinned", groupId] as const,
+  list: (q: string, groupId: string | null) => ["clips", "list", { q, groupId }] as const,
 };
 
-export function usePinnedClips(enabled: boolean) {
+export function usePinnedClips(enabled: boolean, groupId: string | null) {
   return useQuery({
-    queryKey: clipsKeys.pinned,
-    queryFn: () => api.clips.pinned(),
+    queryKey: clipsKeys.pinned(groupId),
+    queryFn: () => api.clips.pinned(groupId),
     enabled,
     select: (data) => data.items,
   });
 }
 
-export function useClipList(q: string) {
+export function useClipList(q: string, groupId: string | null) {
   return useInfiniteQuery({
-    queryKey: clipsKeys.list(q),
+    queryKey: clipsKeys.list(q, groupId),
     queryFn: ({ pageParam }) =>
-      api.clips.list({ cursor: pageParam ?? undefined, q: q === "" ? undefined : q }),
+      api.clips.list({ cursor: pageParam ?? undefined, q: q === "" ? undefined : q, groupId: groupId ?? undefined }),
     initialPageParam: null as string | null,
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
@@ -38,8 +38,8 @@ export function useClipList(q: string) {
 
 export function useCreateClip() {
   return useMutation({
-    mutationFn: (vars: { content: string; name?: string | null }) =>
-      api.clips.create(vars.content, vars.name),
+    mutationFn: (vars: { content: string; name?: string | null; groupId: string | null }) =>
+      api.clips.create(vars.content, vars.name, vars.groupId),
     // The default networkMode "online" would pause the request while offline,
     // but the PRD wants a visible failed card with a retry action instead.
     networkMode: "always",
@@ -49,11 +49,12 @@ export function useCreateClip() {
 export function useUpdateClip() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: (vars: { id: string; content?: string; pinned?: boolean; name?: string | null }) =>
+    mutationFn: (vars: { id: string; content?: string; pinned?: boolean; name?: string | null; groupId?: string | null }) =>
       api.clips.update(vars.id, {
         content: vars.content,
         pinned: vars.pinned,
         name: vars.name,
+        groupId: vars.groupId,
       }),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: clipsKeys.all }),
   });
@@ -109,7 +110,7 @@ export function useRestoreClip() {
 // Inserts a freshly created clip at the top of the default list's first page;
 // falls back to invalidation when the list is not cached yet.
 export function insertClipIntoListCache(queryClient: QueryClient, clip: Clip): void {
-  const key = clipsKeys.list("");
+  const key = clipsKeys.list("", clip.groupId);
   const existing = queryClient.getQueryData<InfiniteData<ClipListResponse>>(key);
   if (!existing || existing.pages.length === 0) {
     void queryClient.invalidateQueries({ queryKey: key });

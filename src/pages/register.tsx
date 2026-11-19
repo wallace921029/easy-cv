@@ -11,7 +11,7 @@ import {
   getConfirmPasswordIssue,
   getInviteCodeInputSchema,
   getPasswordSchema,
-  getUsernameSchema,
+  getEmailSchema,
 } from "@/lib/validation";
 import { AuthLayout } from "@/components/app/auth-layout";
 import { PasswordInput } from "@/components/app/password-input";
@@ -24,7 +24,7 @@ import { useSystemStatus } from "@/queries/system";
 const getFormSchema = () =>
   z
     .object({
-      username: getUsernameSchema(),
+      username: getEmailSchema(),
       password: getPasswordSchema(),
       confirmPassword: z.string(),
       inviteCode: getInviteCodeInputSchema(),
@@ -84,8 +84,8 @@ export default function RegisterPage() {
       <form onSubmit={onSubmit} noValidate>
         <FieldGroup>
           <Field>
-            <FieldLabel htmlFor="username">{strings.auth.username}</FieldLabel>
-            <Input id="username" autoComplete="username" autoFocus {...register("username")} />
+            <FieldLabel htmlFor="username">{strings.auth.email}</FieldLabel>
+            <Input id="username" type="email" autoComplete="email" autoFocus {...register("username")} />
             <FieldError errors={[errors.username]} />
           </Field>
           <Field>

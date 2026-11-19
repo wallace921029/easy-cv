@@ -5,6 +5,7 @@ import type {
   ClipListResponse,
   ClipResponse,
   CreateClipResponse,
+  Group,
   RegistrationSettings,
   SystemStatus,
   UserResponse,
@@ -122,13 +123,19 @@ export const api = {
     changePassword: (currentPassword: string, newPassword: string) =>
       put<void>("/auth/password", { currentPassword, newPassword }),
   },
+  groups: {
+    list: () => get<{ items: Group[] }>("/groups"),
+    create: (name: string) => post<{ group: Group }>("/groups", { name }),
+    rename: (id: string, name: string) => patch<{ group: Group }>(`/groups/${id}`, { name }),
+    remove: (id: string) => del(`/groups/${id}`),
+  },
   clips: {
-    list: (params: { cursor?: string; q?: string; limit?: number }) =>
+    list: (params: { cursor?: string; q?: string; limit?: number; groupId?: string }) =>
       get<ClipListResponse>("/clips", params),
-    pinned: () => get<ClipListResponse>("/clips", { pinned: "true" }),
-    create: (content: string, name?: string | null) =>
-      post<CreateClipResponse>("/clips", { content, name: name ?? undefined }),
-    update: (id: string, body: { content?: string; pinned?: boolean; name?: string | null }) =>
+    pinned: (groupId: string | null) => get<ClipListResponse>("/clips", { pinned: "true", groupId: groupId ?? undefined }),
+    create: (content: string, name?: string | null, groupId?: string | null) =>
+      post<CreateClipResponse>("/clips", { content, name: name ?? undefined, groupId }),
+    update: (id: string, body: { content?: string; pinned?: boolean; name?: string | null; groupId?: string | null }) =>
       patch<ClipResponse>(`/clips/${id}`, body),
     remove: (id: string) => del(`/clips/${id}`),
     restore: (id: string) => post<ClipResponse>(`/clips/${id}/restore`),

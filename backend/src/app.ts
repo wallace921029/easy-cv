@@ -1,3 +1,4 @@
+import { groupsRoutes } from "./routes/groups.js";
 import Fastify, { type FastifyError, type FastifyInstance } from "fastify";
 import fastifyCookie from "@fastify/cookie";
 import fastifyHelmet from "@fastify/helmet";
@@ -120,6 +121,7 @@ export async function buildApp(options: BuildAppOptions): Promise<FastifyInstanc
       await api.register(systemRoutes);
       await api.register(authRoutes);
       await api.register(clipsRoutes);
+      await api.register(groupsRoutes);
       await api.register(adminRoutes);
     },
     { prefix: "/api" },

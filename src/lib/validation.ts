@@ -1,8 +1,8 @@
 import { z } from "zod";
 import { strings } from "./strings";
 
-export const getUsernameSchema = () =>
-  z.string().regex(/^[A-Za-z0-9_-]{3,32}$/, strings.validation.username);
+export const getEmailSchema = () =>
+  z.email(strings.validation.email).max(254, strings.validation.email);
 
 export const getPasswordSchema = () =>
   z
@@ -21,7 +21,6 @@ export const getConfirmPasswordIssue = () => ({
   message: strings.validation.passwordMismatch,
 });
 
-export const usernameSchema = getUsernameSchema();
 export const passwordSchema = getPasswordSchema();
 export const inviteCodeInputSchema = getInviteCodeInputSchema();
 export const initCodeInputSchema = getInitCodeInputSchema();

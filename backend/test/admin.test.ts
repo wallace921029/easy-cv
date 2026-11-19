@@ -20,7 +20,7 @@ async function makeUser(
   username: string,
 ): Promise<{ cookie: string; userId: string }> {
   enableRegistration(db);
-  const res = await registerUser(app, username, `${username}-password`, "TESTCODE8");
+  const res = await registerUser(app, username, `${username.split("@")[0]}-password`, "TESTCODE8");
   assert.equal(res.statusCode, 201);
   return { cookie: sessionCookie(res), userId: res.json().user.id as string };
 }
@@ -28,7 +28,7 @@ async function makeUser(
 test("admin api: anonymous -> 401, regular user -> 403", async () => {
   const { app, db, close } = await createTestApp();
   await setupAdmin(app);
-  const { cookie } = await makeUser(app, db, "alice");
+  const { cookie } = await makeUser(app, db, "alice@example.com");
 
   for (const req of [
     { method: "GET", url: "/api/admin/users" },
@@ -47,7 +47,7 @@ test("users list: admin first, clipCount ignores soft-deleted clips", async () =
   const { app, db, close } = await createTestApp();
   const setup = await setupAdmin(app);
   const adminCookie = sessionCookie(setup);
-  const alice = await makeUser(app, db, "alice");
+  const alice = await makeUser(app, db, "alice@example.com");
 
   await authed(app, alice.cookie)({
     method: "POST",
@@ -68,9 +68,9 @@ test("users list: admin first, clipCount ignores soft-deleted clips", async () =
   assert.equal(res.statusCode, 200);
   const items = res.json().items;
   assert.equal(items.length, 2);
-  assert.equal(items[0].username, "admin");
+  assert.equal(items[0].username, "admin@example.com");
   assert.equal(items[0].role, "admin");
-  assert.equal(items[1].username, "alice");
+  assert.equal(items[1].username, "alice@example.com");
   assert.equal(items[1].clipCount, 1);
   assert.ok(items[1].lastLoginAt);
   await close();
@@ -79,7 +79,7 @@ test("users list: admin first, clipCount ignores soft-deleted clips", async () =
 test("disable: sessions die instantly, login -> 403; re-enable restores access", async () => {
   const { app, db, close } = await createTestApp();
   const adminCookie = sessionCookie(await setupAdmin(app));
-  const alice = await makeUser(app, db, "alice");
+  const alice = await makeUser(app, db, "alice@example.com");
 
   const disabled = await authed(app, adminCookie)({
     method: "PATCH",
@@ -93,7 +93,7 @@ test("disable: sessions die instantly, login -> 403; re-enable restores access",
     (await authed(app, alice.cookie)({ method: "GET", url: "/api/auth/me" })).statusCode,
     401,
   );
-  const loginRes = await login(app, "alice", "alice-password");
+  const loginRes = await login(app, "alice@example.com", "alice-password");
   assert.equal(loginRes.statusCode, 403);
   assert.equal(loginRes.json().error.code, "ACCOUNT_DISABLED");
 
@@ -103,14 +103,14 @@ test("disable: sessions die instantly, login -> 403; re-enable restores access",
     payload: { status: "active" },
   });
   assert.equal(enabled.statusCode, 200);
-  assert.equal((await login(app, "alice", "alice-password")).statusCode, 200);
+  assert.equal((await login(app, "alice@example.com", "alice-password")).statusCode, 200);
   await close();
 });
 
 test("reset password: old sessions die, new password works, old one does not", async () => {
   const { app, db, close } = await createTestApp();
   const adminCookie = sessionCookie(await setupAdmin(app));
-  const alice = await makeUser(app, db, "alice");
+  const alice = await makeUser(app, db, "alice@example.com");
 
   const res = await authed(app, adminCookie)({
     method: "PUT",
@@ -123,15 +123,15 @@ test("reset password: old sessions die, new password works, old one does not", a
     (await authed(app, alice.cookie)({ method: "GET", url: "/api/auth/me" })).statusCode,
     401,
   );
-  assert.equal((await login(app, "alice", "alice-password")).statusCode, 401);
-  assert.equal((await login(app, "alice", "reset-password-9")).statusCode, 200);
+  assert.equal((await login(app, "alice@example.com", "alice-password")).statusCode, 401);
+  assert.equal((await login(app, "alice@example.com", "reset-password-9")).statusCode, 200);
   await close();
 });
 
 test("delete: user, sessions and clips are all gone", async () => {
   const { app, db, close } = await createTestApp();
   const adminCookie = sessionCookie(await setupAdmin(app));
-  const alice = await makeUser(app, db, "alice");
+  const alice = await makeUser(app, db, "alice@example.com");
   await authed(app, alice.cookie)({
     method: "POST",
     url: "/api/clips",
@@ -147,7 +147,7 @@ test("delete: user, sessions and clips are all gone", async () => {
   assert.equal(db.select().from(users).where(eq(users.id, alice.userId)).get(), undefined);
   assert.equal(db.select().from(sessions).where(eq(sessions.userId, alice.userId)).all().length, 0);
   assert.equal(db.select().from(clips).where(eq(clips.userId, alice.userId)).all().length, 0);
-  assert.equal((await login(app, "alice", "alice-password")).statusCode, 401);
+  assert.equal((await login(app, "alice@example.com", "alice-password")).statusCode, 401);
   await close();
 });
 
@@ -235,9 +235,9 @@ test("invite code regeneration invalidates the old code; closing registration ke
   const newCode = regenerated.json().inviteCode as string;
   assert.notEqual(newCode, "OLDCODE1");
 
-  const oldTry = await registerUser(app, "alice", "alice-password", "OLDCODE1");
+  const oldTry = await registerUser(app, "alice@example.com", "alice-password", "OLDCODE1");
   assert.equal(oldTry.statusCode, 403);
-  const newTry = await registerUser(app, "alice", "alice-password", newCode);
+  const newTry = await registerUser(app, "alice@example.com", "alice-password", newCode);
   assert.equal(newTry.statusCode, 201);
 
   const closed = await authedAdmin({
@@ -247,7 +247,7 @@ test("invite code regeneration invalidates the old code; closing registration ke
   });
   assert.equal(closed.json().inviteCode, newCode);
 
-  const afterClose = await registerUser(app, "bob", "bob-password", newCode);
+  const afterClose = await registerUser(app, "bob@example.com", "bob-password", newCode);
   assert.equal(afterClose.statusCode, 403);
   assert.equal(afterClose.json().error.code, "REGISTRATION_CLOSED");
 
